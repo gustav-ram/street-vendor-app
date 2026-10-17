@@ -1,6 +1,8 @@
 # StreetEats Finder — Build Plan
 
-Draft for review · 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
+Approved 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
+
+**Progress:** M1 done (2026-10-17). Next: M2.
 
 ## 1. Key decisions
 
@@ -26,7 +28,14 @@ Changes from the brief, with reasons:
 
 Already installed: Node 24.2, npm 11.3, Xcode 27 with a booted iPhone 17 (iOS 27) simulator, Homebrew 7.
 
-Missing: **any Docker runtime** (blocks M1, see Q1), CocoaPods (not needed with Expo Go), watchman (optional).
+Missing at the start: any Docker runtime, CocoaPods (not needed with Expo Go), watchman (optional).
+
+Resolved during M1:
+- **Colima** + docker CLI + docker-compose installed with Homebrew (Q1). The compose plugin is registered in `~/.docker/config.json`.
+- The official `postgis/postgis` image is amd64-only, so we use `imresamu/postgis`, the multi-arch build from the same maintainers.
+- Ports 3000 and 8081 are used by another local project, so the **web app runs on 3100** and **Metro on 8090**.
+- That project also relies on Expo Go 57 in the default "iPhone 17" simulator. SDK 58 needs Expo Go 58, so this app is tested on a separate **"StreetEats iPhone 17"** simulator instead of changing it.
+- npm nested `expo-router` because Expo's own `pretty-format` wants `react-is` 18. A root `overrides` entry gives `pretty-format` `react-is` 19, so everything hoists and the Expo CLI can resolve the router.
 
 ## 3. Architecture
 
@@ -220,9 +229,8 @@ Seeded logins (customer, live vendor, brand-new vendor, admin) use `.test` email
 12. Seeded vendors only stay live while `npm run demo:live` is running. Otherwise the heartbeat rules expire them after 5 minutes, as designed.
 13. Out of scope for now: real push delivery, email/SMS, face and plate blurring, App Store builds, cloud deploy, offline mode on the web, and payments.
 
-## 10. Open question (blocking M1)
+## 10. Decisions log
 
-**Q1. Which Docker runtime should run Postgres + PostGIS?** None is installed.
-- **Colima** (recommended): free and open source, CLI-only, light. I can install it with `brew install colima docker docker-compose` once you agree.
-- **OrbStack** or **Docker Desktop**: GUI apps you install yourself.
-- If you'd rather not use Docker at all: Homebrew `postgresql@17` + `postgis`. Everything else stays the same, but it departs from the brief's Docker Compose setup.
+- **Q1 (Docker runtime):** Colima, installed with Homebrew (2026-10-17).
+- **Web i18n:** pages live under `/en` and `/es` (Next's recommended pattern). `proxy.ts` picks the language from a remembered choice or Accept-Language.
+- **Mobile language:** follows the phone's settings, with a manual override saved in `expo-sqlite/kv-store`.
