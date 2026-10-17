@@ -31,3 +31,7 @@ export function parseAcceptLanguage(header: string | null | undefined): string[]
     .sort((a, b) => b.q - a.q || a.index - b.index)
     .map((x) => x.tag);
 }
+
+export function isUiLocale(value: string | null | undefined): value is UiLocale {
+  return value === 'en' || value === 'es';
+}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { UI_LOCALES } from "@streeteats/shared";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { I18nProvider } from "@/lib/i18n/client";
+import { Providers } from "@/components/Providers";
 import { isLocale } from "@/lib/i18n/locale";
 import { getT } from "@/lib/i18n/server";
 import "../globals.css";
@@ -26,15 +26,15 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   return (
     <html lang={lang} className="h-full antialiased">
       <body className="flex min-h-full flex-col">
-        <I18nProvider lang={lang}>
-          <header className="flex items-center justify-between gap-4 border-b-2 border-sand px-4 py-3 sm:px-8">
+        <Providers lang={lang}>
+          <header className="flex h-(--header-h) shrink-0 items-center justify-between gap-4 border-b-2 border-sand px-4 sm:px-6">
             <a href={`/${lang}`} className="text-2xl font-black tracking-tight text-chile">
               {t("appName")}
             </a>
             <LanguageSwitcher lang={lang} />
           </header>
           {children}
-        </I18nProvider>
+        </Providers>
       </body>
     </html>
   );

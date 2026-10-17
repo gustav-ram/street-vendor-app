@@ -1,0 +1,58 @@
+{
+  "searchLabel": "Search vendors",
+  "searchPlaceholder": "Hot dogs, elote, flowers…",
+  "searchButton": "Search",
+  "clear": "Clear search",
+  "filters": "Filters",
+  "filtersActive_one": "Filters · {{count}}",
+  "filtersActive_other": "Filters · {{count}}",
+  "view": {
+    "map": "Map",
+    "list": "List"
+  },
+  "openNow": "Open now",
+  "openNowHint": "Turn off to also see who's coming later",
+  "radius": "Distance",
+  "category": "What are you looking for?",
+  "price": "Price",
+  "payment": "Pays with",
+  "languages": "Speaks",
+  "reset": "Reset",
+  "apply": "Show results",
+  "results_one": "{{count}} open nearby",
+  "results_other": "{{count}} open nearby",
+  "noResults": "No one is open nearby right now.",
+  "noResultsHint": "Try a bigger distance, fewer filters, or see who's coming later.",
+  "showUpcoming": "See who's coming later",
+  "understoodAs": "Showing: {{tags}}",
+  "upcomingTitle": "Coming later",
+  "error": "Couldn't load vendors. Check your connection and try again.",
+  "away": "{{distance}} away",
+  "location": {
+    "useMine": "Use my location",
+    "locating": "Finding you…",
+    "denied": "Location is off. Choose an area instead.",
+    "unavailable": "We couldn't get your location. Choose an area instead.",
+    "choose": "Change area",
+    "placeholder": "Neighborhood or city",
+    "searchThisArea": "Search this area",
+    "privacy": "Your location is only used for this search. It's never saved.",
+    "near": "Near {{place}}",
+    "nearYou": "Near you",
+    "mapCenter": "this area"
+  },
+  "live": {
+    "openNow": "Open now",
+    "confirmedJustNow": "Confirmed just now",
+    "confirmedMinutes_one": "Confirmed {{count}} min ago",
+    "confirmedMinutes_other": "Confirmed {{count}} min ago",
+    "approximate": "Approximate area",
+    "exact": "Exact spot",
+    "until": "Until {{time}}"
+  },
+  "upcoming": {
+    "post": "Planned",
+    "schedule": "Usually here",
+    "when": "{{start}} – {{end}}"
+  }
+}

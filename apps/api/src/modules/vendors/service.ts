@@ -54,6 +54,8 @@ export async function getPublicProfile(ctx: AppContext, vendorId: string): Promi
   const scheduledSpots = scheduleRows.flatMap((s) => {
     if (s.lat === null) return [];
     const next = nextOccurrence(now, Number(s.weekday), String(s.start_time), String(s.end_time), timezone);
+    // While they're live, a schedule slot that's already running is old news.
+    if (live && next && next.start <= now) return [];
     return next
       ? [{
           id: String(s.id),

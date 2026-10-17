@@ -1,0 +1,58 @@
+{
+  "searchLabel": "Buscar vendedores",
+  "searchPlaceholder": "Hot dogs, elotes, flores…",
+  "searchButton": "Buscar",
+  "clear": "Borrar búsqueda",
+  "filters": "Filtros",
+  "filtersActive_one": "Filtros · {{count}}",
+  "filtersActive_other": "Filtros · {{count}}",
+  "view": {
+    "map": "Mapa",
+    "list": "Lista"
+  },
+  "openNow": "Abierto ahora",
+  "openNowHint": "Desactívalo para ver también quién llega más tarde",
+  "radius": "Distancia",
+  "category": "¿Qué buscas?",
+  "price": "Precio",
+  "payment": "Acepta",
+  "languages": "Habla",
+  "reset": "Reiniciar",
+  "apply": "Ver resultados",
+  "results_one": "{{count}} abierto cerca",
+  "results_other": "{{count}} abiertos cerca",
+  "noResults": "Nadie está abierto cerca en este momento.",
+  "noResultsHint": "Prueba una distancia mayor, menos filtros, o mira quién llega más tarde.",
+  "showUpcoming": "Ver quién llega más tarde",
+  "understoodAs": "Mostrando: {{tags}}",
+  "upcomingTitle": "Llegan más tarde",
+  "error": "No se pudieron cargar los vendedores. Revisa tu conexión e intenta de nuevo.",
+  "away": "a {{distance}}",
+  "location": {
+    "useMine": "Usar mi ubicación",
+    "locating": "Buscándote…",
+    "denied": "La ubicación está apagada. Elige una zona.",
+    "unavailable": "No pudimos obtener tu ubicación. Elige una zona.",
+    "choose": "Cambiar zona",
+    "placeholder": "Barrio o ciudad",
+    "searchThisArea": "Buscar en esta zona",
+    "privacy": "Tu ubicación solo se usa para esta búsqueda. Nunca se guarda.",
+    "near": "Cerca de {{place}}",
+    "nearYou": "Cerca de ti",
+    "mapCenter": "esta zona"
+  },
+  "live": {
+    "openNow": "Abierto ahora",
+    "confirmedJustNow": "Confirmado hace un momento",
+    "confirmedMinutes_one": "Confirmado hace {{count}} min",
+    "confirmedMinutes_other": "Confirmado hace {{count}} min",
+    "approximate": "Zona aproximada",
+    "exact": "Lugar exacto",
+    "until": "Hasta las {{time}}"
+  },
+  "upcoming": {
+    "post": "Planeado",
+    "schedule": "Suele estar aquí",
+    "when": "{{start}} – {{end}}"
+  }
+}

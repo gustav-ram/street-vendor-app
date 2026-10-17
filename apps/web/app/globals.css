@@ -19,6 +19,7 @@
 
 html {
   font-size: 18px;
+  --header-h: 4.25rem;
 }
 
 body {
@@ -30,4 +31,32 @@ body {
 :focus-visible {
   outline: 3px solid var(--color-marigold);
   outline-offset: 2px;
+}
+
+/* Map pins: emoji in a bold ring, big enough to tap. */
+.se-pin-wrap {
+  background: none;
+  border: none;
+}
+.se-pin {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 3px solid var(--color-chile);
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+  transition: transform 120ms ease;
+}
+.se-pin.is-selected {
+  border-color: var(--color-ink);
+  transform: scale(1.2);
+}
+.se-pin.is-upcoming {
+  border-style: dashed;
+  border-color: var(--color-ink-soft);
+  opacity: 0.85;
 }
