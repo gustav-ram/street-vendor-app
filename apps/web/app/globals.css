@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * High-contrast, light-only palette: vendors and customers often use this
+ * outdoors in direct sun. Text on paper is ~16:1; brand colors pass WCAG AA
+ * against white for large and bold text.
+ */
+@theme {
+  --color-paper: #fffaf3;
+  --color-sand: #f3e8d8;
+  --color-ink: #1a1410;
+  --color-ink-soft: #5b5048;
+  --color-chile: #b42318;
+  --color-chile-dark: #8c1c13;
+  --color-live: #157f3c;
+  --color-marigold: #f5a524;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: 18px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-marigold);
+  outline-offset: 2px;
 }

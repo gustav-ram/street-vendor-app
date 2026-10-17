@@ -20,9 +20,9 @@ const envSchema = z.object({
   TEST_DATABASE_URL: z.string().optional(),
   CORS_ORIGINS: z
     .string()
-    .default('http://localhost:3000')
+    .default('http://localhost:3100')
     .transform((s) => s.split(',').map((o) => o.trim()).filter(Boolean)),
-  WEB_BASE_URL: z.url().default('http://localhost:3000'),
+  WEB_BASE_URL: z.url().default('http://localhost:3100'),
   JWT_SECRET: z.string().min(32),
   LOCATION_FUZZ_SECRET: z.string().min(32),
   ACCESS_TOKEN_TTL_MIN: z.coerce.number().int().positive().default(15),

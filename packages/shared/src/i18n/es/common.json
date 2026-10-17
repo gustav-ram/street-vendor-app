@@ -1,0 +1,43 @@
+{
+  "appName": "StreetEats",
+  "tagline": "Comida callejera, flores y más. Cerca de ti, ahora mismo.",
+  "language": {
+    "label": "Idioma",
+    "switchTo": "Switch to English",
+    "en": "English",
+    "es": "Español"
+  },
+  "nav": {
+    "map": "Mapa",
+    "upcoming": "Próximos",
+    "favorites": "Favoritos",
+    "account": "Cuenta",
+    "privacy": "Tu privacidad",
+    "forVendors": "Para vendedores"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "retry": "Intentar de nuevo",
+    "done": "Listo",
+    "delete": "Borrar",
+    "edit": "Editar"
+  },
+  "status": {
+    "loading": "Cargando…",
+    "saving": "Guardando…",
+    "offline": "Sin conexión",
+    "serverOk": "Conectado al servidor de StreetEats",
+    "serverDown": "No se puede conectar con el servidor de StreetEats"
+  },
+  "home": {
+    "customerTitle": "¿Con hambre? Mira quién está abierto cerca",
+    "customerBody": "Encuentra carritos de hot dogs, tacos, fruta, elotes, flores y más en un mapa en vivo.",
+    "vendorTitle": "¿Vendes en la calle?",
+    "vendorBody": "Regístrate gratis. Toca \"Estoy abierto\". Los clientes te encuentran.",
+    "comingSoon": "Llega en la próxima etapa"
+  }
+}

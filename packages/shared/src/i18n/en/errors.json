@@ -1,0 +1,15 @@
+{
+  "validation_failed": "Please check the highlighted fields.",
+  "unauthorized": "Please sign in again.",
+  "forbidden": "You don't have access to this.",
+  "not_found": "We couldn't find that.",
+  "conflict": "This was changed somewhere else. Please refresh.",
+  "rate_limited": "Too many tries. Please wait a minute.",
+  "invalid_credentials": "That email, phone or password doesn't match.",
+  "account_locked": "Too many wrong tries. Please wait 15 minutes.",
+  "identifier_taken": "There's already an account with that email or phone.",
+  "invalid_invite": "That invite code isn't valid or has expired.",
+  "payload_too_large": "That file is too big.",
+  "internal": "Something went wrong on our side. Please try again.",
+  "network": "No connection. Check your signal and try again."
+}

@@ -1,0 +1,15 @@
+{
+  "validation_failed": "Revisa los campos marcados.",
+  "unauthorized": "Vuelve a iniciar sesión, por favor.",
+  "forbidden": "No tienes acceso a esto.",
+  "not_found": "No lo encontramos.",
+  "conflict": "Esto se cambió en otro lugar. Actualiza la página.",
+  "rate_limited": "Demasiados intentos. Espera un minuto.",
+  "invalid_credentials": "El correo, teléfono o contraseña no coinciden.",
+  "account_locked": "Demasiados intentos fallidos. Espera 15 minutos.",
+  "identifier_taken": "Ya existe una cuenta con ese correo o teléfono.",
+  "invalid_invite": "Ese código de invitación no es válido o ya venció.",
+  "payload_too_large": "Ese archivo es demasiado grande.",
+  "internal": "Algo salió mal de nuestro lado. Intenta de nuevo.",
+  "network": "Sin conexión. Revisa tu señal e intenta de nuevo."
+}

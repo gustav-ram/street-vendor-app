@@ -1,0 +1,51 @@
+{
+  "categories": {
+    "hot_dogs": "Hot dogs",
+    "tacos": "Tacos",
+    "flowers": "Flores",
+    "elote": "Elotes",
+    "fruit": "Fruta",
+    "churros": "Churros",
+    "tamales": "Tamales",
+    "pupusas": "Pupusas",
+    "paletas": "Paletas y helado",
+    "drinks": "Bebidas",
+    "snacks": "Antojitos",
+    "bakery": "Pan",
+    "other": "Otro"
+  },
+  "payments": {
+    "cash": "Efectivo",
+    "card": "Tarjeta",
+    "venmo": "Venmo",
+    "zelle": "Zelle",
+    "cash_app": "Cash App",
+    "apple_pay": "Apple Pay"
+  },
+  "languages": {
+    "en": "Inglés",
+    "es": "Español",
+    "zap": "Zapoteco",
+    "mix": "Mixteco",
+    "nah": "Náhuatl",
+    "quc": "K'iche'",
+    "kjb": "Q'anjob'al",
+    "ko": "Coreano",
+    "zh": "Chino",
+    "tl": "Tagalo",
+    "vi": "Vietnamita",
+    "hy": "Armenio",
+    "ru": "Ruso",
+    "pt": "Portugués",
+    "fr": "Francés",
+    "ar": "Árabe",
+    "fa": "Persa",
+    "ja": "Japonés",
+    "th": "Tailandés"
+  },
+  "priceLevels": {
+    "1": "$",
+    "2": "$$",
+    "3": "$$$"
+  }
+}

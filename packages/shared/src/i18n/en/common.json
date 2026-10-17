@@ -1,0 +1,43 @@
+{
+  "appName": "StreetEats",
+  "tagline": "Street food, flowers and more. Near you, right now.",
+  "language": {
+    "label": "Language",
+    "switchTo": "Cambiar a español",
+    "en": "English",
+    "es": "Español"
+  },
+  "nav": {
+    "map": "Map",
+    "upcoming": "Upcoming",
+    "favorites": "Favorites",
+    "account": "Account",
+    "privacy": "Your privacy",
+    "forVendors": "For vendors"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "continue": "Continue",
+    "retry": "Try again",
+    "done": "Done",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "status": {
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "offline": "No connection",
+    "serverOk": "Connected to the StreetEats server",
+    "serverDown": "Can't reach the StreetEats server"
+  },
+  "home": {
+    "customerTitle": "Hungry? See who's open near you",
+    "customerBody": "Find hot dog carts, taco stands, fruit cups, elote, flowers and more on a live map.",
+    "vendorTitle": "Do you sell on the street?",
+    "vendorBody": "Sign up free. Tap \"I'm Open\". Customers find you.",
+    "comingSoon": "Coming in the next milestone"
+  }
+}
