@@ -1,3 +1,4 @@
+import type { DestinationStream } from 'pino';
 import type { FastifyServerOptions } from 'fastify';
 import type { Config } from '../config';
 
@@ -9,15 +10,20 @@ import type { Config } from '../config';
  * - errors are logged as name/message/code/stack only. Driver errors carry
  *   the query parameters as properties, which could include coordinates.
  */
-export function loggerOptions(config: Config): FastifyServerOptions['logger'] {
-  if (config.env === 'test') return false;
-  return {
+export function loggerOptions(config: Config, stream?: DestinationStream): FastifyServerOptions['logger'] {
+  const base = {
     level: 'info',
     serializers: {
       req: () => ({}),
       res: () => ({}),
       err: safeError,
     },
+  };
+  // Tests pass a stream to inspect exactly what would be written.
+  if (stream) return { ...base, stream };
+  if (config.env === 'test') return false;
+  return {
+    ...base,
     ...(config.env === 'development'
       ? { transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } } }
       : {}),

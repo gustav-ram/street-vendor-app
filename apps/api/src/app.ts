@@ -9,6 +9,7 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { sql } from 'drizzle-orm';
+import type { DestinationStream } from 'pino';
 import type { Role } from '@streeteats/shared';
 import type { Config } from './config';
 import type { Db } from './db/client';
@@ -37,11 +38,13 @@ export interface BuildAppOptions {
   db: Db;
   /** Tests turn rate limiting off except where they exercise it. */
   rateLimit?: boolean;
+  /** Tests capture log output here. */
+  logStream?: DestinationStream;
 }
 
-export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true }: BuildAppOptions) {
+export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true, logStream }: BuildAppOptions) {
   const app = Fastify({
-    logger: loggerOptions(config),
+    logger: loggerOptions(config, logStream),
     // Fastify's built-in request lines include the raw URL; we log our own below.
     logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 256 * 1024,

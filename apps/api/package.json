@@ -25,6 +25,7 @@
     "fastify-plugin": "^6.0.1",
     "fastify-type-provider-zod": "^7.0.0",
     "jose": "^6.2.12",
+    "pino": "^10.4.0",
     "postgres": "^3.4.9",
     "zod": "^4.6.7"
   },

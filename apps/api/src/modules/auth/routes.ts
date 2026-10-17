@@ -77,7 +77,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.post(
     '/auth/refresh',
-    { schema: { body: refreshSchema.optional(), response: { 200: authResponseSchema } }, config: AUTH_RATE_LIMIT },
+    { schema: { body: refreshSchema.nullish(), response: { 200: authResponseSchema } }, config: AUTH_RATE_LIMIT },
     async (request, reply) => {
       let token = request.body?.refreshToken;
       if (!token) {
@@ -92,7 +92,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.post(
     '/auth/logout',
-    { schema: { body: refreshSchema.optional(), response: { 204: z.null() } } },
+    { schema: { body: refreshSchema.nullish(), response: { 204: z.null() } } },
     async (request, reply) => {
       let token = request.body?.refreshToken;
       if (!token && request.cookies[REFRESH_COOKIE]) {
