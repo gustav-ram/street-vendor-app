@@ -22,7 +22,8 @@
     "ios": "npm run ios -w @streeteats/mobile",
     "admin": "npm run admin -w @streeteats/api --",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "demo:live": "npm run demo:live -w @streeteats/api --"
   },
   "overrides": {
     "pretty-format": {

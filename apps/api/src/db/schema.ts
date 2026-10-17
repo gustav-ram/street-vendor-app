@@ -123,6 +123,7 @@ export const vendorProfiles = pgTable(
     completedAt: ts('completed_at'),
     // Rounded to the hour; a timestamp only, never a place.
     lastLiveAt: ts('last_live_at'),
+    // Maintained by triggers (migration 0003) from name, tags, menu and description.
     searchDoc: tsvector('search_doc'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -194,7 +195,12 @@ export const tagSynonyms = pgTable(
     phrase: text('phrase').notNull(),
     lang: text('lang').notNull().default('any'),
   },
-  (t) => [unique('tag_synonyms_tag_phrase').on(t.tagId, t.phrase), index('tag_synonyms_phrase_idx').on(t.phrase)],
+  (t) => [
+    unique('tag_synonyms_tag_phrase').on(t.tagId, t.phrase),
+    index('tag_synonyms_phrase_idx').on(t.phrase),
+    // Typo-tolerant lookups ("tamals" -> "tamales").
+    index('tag_synonyms_phrase_trgm').using('gin', t.phrase.op('gin_trgm_ops')),
+  ],
 );
 
 export const vendorTags = pgTable(

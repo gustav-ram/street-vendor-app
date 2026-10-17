@@ -17,6 +17,7 @@ import { ApiError } from './lib/errors';
 import { loggerOptions, safeError } from './lib/logging';
 import { type AuthUser, createTokenService, type TokenService } from './lib/tokens';
 import { authRoutes } from './modules/auth/routes';
+import { discoveryRoutes } from './modules/discovery/routes';
 
 export interface AppContext {
   config: Config;
@@ -128,6 +129,7 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
   });
 
   await app.register(authRoutes, { prefix: '/v1' });
+  await app.register(discoveryRoutes, { prefix: '/v1' });
 
   return app;
 }

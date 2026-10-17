@@ -1,0 +1,1 @@
+CREATE INDEX "tag_synonyms_phrase_trgm" ON "tag_synonyms" USING gin ("phrase" gin_trgm_ops);

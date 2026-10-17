@@ -88,3 +88,44 @@ export const LIMITS = {
   reportDetailsMax: 500,
   photoMaxBytes: 10 * 1024 * 1024,
 } as const;
+
+/**
+ * Every category has a base tag, so searching "flores" or "hot dog" finds
+ * vendors in that category even if they never added tags themselves.
+ */
+export const CATEGORY_BASE_TAG: Record<Category, string | null> = {
+  hot_dogs: 'hot-dog',
+  tacos: 'tacos',
+  flowers: 'flowers',
+  elote: 'elote',
+  fruit: 'fruit-cup',
+  churros: 'churros',
+  tamales: 'tamales',
+  pupusas: 'pupusas',
+  paletas: 'paletas',
+  drinks: 'aguas-frescas',
+  snacks: 'antojitos',
+  bakery: 'pan-dulce',
+  other: null,
+};
+
+/** Map pins and list icons. Emoji keep the apps light (no image assets). */
+export const CATEGORY_EMOJI: Record<Category, string> = {
+  hot_dogs: '🌭',
+  tacos: '🌮',
+  flowers: '💐',
+  elote: '🌽',
+  fruit: '🥭',
+  churros: '🥨',
+  tamales: '🫔',
+  pupusas: '🫓',
+  paletas: '🍦',
+  drinks: '🥤',
+  snacks: '🍿',
+  bakery: '🥐',
+  other: '🛒',
+};
+
+/** Search radius choices, in meters (shown as miles or km). */
+export const RADIUS_OPTIONS_M = [1609, 4828, 8047, 16093, 40234] as const;
+export const DEFAULT_RADIUS_M = 8047;

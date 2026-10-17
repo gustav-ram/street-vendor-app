@@ -18,11 +18,13 @@ describe('request logging', () => {
       payload: { email, role: 'customer', credential: { kind: 'password', secret: 'correct-horse-battery' } },
     });
     await ctx.app.inject({ method: 'GET', url: '/v1/nowhere?lat=34.05123&lng=-118.25456', remoteAddress: '198.51.100.7' });
+    await ctx.app.inject({ method: 'POST', url: '/v1/search', payload: { location: { lat: 34.06789, lng: -118.29876 }, q: 'secret tamales' } });
 
     const output = ctx.logs.join('\n');
     expect(output).toContain('"route":"/v1/auth/register"');
     expect(output).toContain('"route":"(unmatched)"');
-    for (const secret of [email, 'correct-horse-battery', '34.05123', '-118.25456', '203.0.113.9', '198.51.100.7', 'nowhere']) {
+    expect(output).toContain('"route":"/v1/search"');
+    for (const secret of [email, 'correct-horse-battery', '34.05123', '-118.25456', '203.0.113.9', '198.51.100.7', 'nowhere', '34.067', '118.298', 'secret tamales']) {
       expect(output).not.toContain(secret);
     }
   });

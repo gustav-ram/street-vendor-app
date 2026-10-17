@@ -12,7 +12,8 @@
     "seed:clear": "tsx scripts/seed-clear.ts",
     "admin": "tsx scripts/admin.ts",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "demo:live": "tsx scripts/demo-live.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.3",

@@ -15,6 +15,20 @@
       "when": 1792278117222,
       "tag": "0001_init",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792280317758,
+      "tag": "0002_synonym_trgm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792280318475,
+      "tag": "0003_search_doc_triggers",
+      "breakpoints": true
     }
   ]
 }

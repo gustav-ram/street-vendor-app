@@ -29,7 +29,7 @@ export const TAGS: TagSeed[] = [
     en: 'Bacon-wrapped hot dog',
     es: 'Hot dog envuelto en tocino',
     category: 'hot_dogs',
-    synonyms: [...LA_STYLE, 'bacon wrapped hot dog', 'bacon wrapped', 'bacon dog', 'bacon hot dog', 'hot dog con tocino', 'jocho con tocino', 'dogo con tocino'],
+    synonyms: [...LA_STYLE, 'bacon wrapped hot dog', 'bacon wrapped', 'bacon dog', 'bacon hot dog', 'hot dog con tocino', 'jocho con tocino', 'dogo con tocino', 'perro caliente con tocino', 'perros con tocino', 'tocino'],
   },
   {
     slug: 'danger-dog',

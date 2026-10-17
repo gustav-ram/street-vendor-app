@@ -202,6 +202,12 @@ export async function seed(db: Db) {
 if (isMain(import.meta.url)) {
   const { db, close } = createDb(loadConfig().databaseUrl);
   try {
+    if (process.argv.includes('--tags-only')) {
+      // Refresh tags and synonyms without touching demo data.
+      const ids = await seedTags(db);
+      console.log(`Updated ${ids.size} tags and their synonyms.`);
+      process.exit(0);
+    }
     const r = await seed(db);
     console.log(
       `Seeded ${r.vendors} demo vendors, ${r.tags} tags, ${r.reviews} reviews and ${r.upcomingPosts} "tomorrow" posts.\n` +
