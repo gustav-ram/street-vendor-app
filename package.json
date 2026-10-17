@@ -1,0 +1,27 @@
+{
+  "name": "streeteats",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d --wait db",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d --wait db && npm run db:migrate",
+    "db:generate": "npm run db:generate -w @streeteats/api",
+    "db:migrate": "npm run db:migrate -w @streeteats/api",
+    "seed": "npm run seed -w @streeteats/api",
+    "seed:clear": "npm run seed:clear -w @streeteats/api",
+    "dev:api": "npm run dev -w @streeteats/api",
+    "dev:web": "npm run dev -w @streeteats/web",
+    "dev:mobile": "npm run start -w @streeteats/mobile",
+    "ios": "npm run ios -w @streeteats/mobile",
+    "admin": "npm run admin -w @streeteats/api --",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
