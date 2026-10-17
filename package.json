@@ -23,5 +23,10 @@
     "admin": "npm run admin -w @streeteats/api --",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "overrides": {
+    "pretty-format": {
+      "react-is": "^19.3.1"
+    }
   }
 }
