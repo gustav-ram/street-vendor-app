@@ -10,5 +10,7 @@ export * from './schemas/search';
 export * from './schemas/dashboard';
 export * from './schemas/photos';
 export * from './schemas/community';
+export * from './outbox/core';
+export * from './outbox/rebase';
 export * from './live/controller';
 export * from './upload/client';

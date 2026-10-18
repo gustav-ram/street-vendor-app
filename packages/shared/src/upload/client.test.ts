@@ -6,7 +6,7 @@ const coded = (code: string) => Object.assign(new Error(code), { code });
 /** A server that keeps the bytes it receives, and a network that can drop requests. */
 function fakeServer(totalBytes: number) {
   let received = new Uint8Array(0);
-  const drops: Array<'before' | 'after'> = [];
+  const drops: Array<'before' | 'after' | undefined> = [];
   const t: UploadTransport = {
     create: vi.fn(async () => ({ id: 'u1', offset: 0, totalBytes })),
     offset: vi.fn(async () => received.length),
@@ -73,3 +73,30 @@ describe('resumable uploads', () => {
     expect(uploadTypeOf('image/svg+xml')).toBeNull();
   });
 });
+
+describe('resuming after a restart', () => {
+  it('carries on from what the server already has', async () => {
+    const s = fakeServer(3000);
+    // One chunk gets through, then the signal drops and the app is closed.
+    s.drops.push(undefined, 'before');
+    await expect(uploadBlob(s.t, data(3000), 'image/jpeg', { chunkBytes: 1000, retries: 0, sleep: noSleep })).rejects.toMatchObject({ code: 'network' });
+    expect(s.received()).toHaveLength(1000);
+    const created: string[] = [];
+    const id = await uploadBlob(s.t, data(3000), 'image/jpeg', { chunkBytes: 1000, sleep: noSleep, uploadId: 'u1', onCreated: (i) => void created.push(i) });
+    expect(id).toBe('u1');
+    expect(created).toEqual([]);
+    expect(s.t.create).toHaveBeenCalledTimes(1);
+    expect(s.received()).toEqual(new Uint8Array(await data(3000).arrayBuffer()));
+  });
+
+  it('starts over when the old upload has expired', async () => {
+    const s = fakeServer(1000);
+    s.t.offset = vi.fn(async () => {
+      throw coded('not_found');
+    });
+    const created: string[] = [];
+    await uploadBlob(s.t, data(1000), 'image/jpeg', { sleep: noSleep, uploadId: 'gone', onCreated: (i) => void created.push(i) });
+    expect(created).toEqual(['u1']);
+  });
+});
+

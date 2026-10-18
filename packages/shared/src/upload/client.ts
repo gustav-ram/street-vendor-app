@@ -22,6 +22,10 @@ export interface UploadOptions {
   retries?: number;
   chunkBytes?: number;
   sleep?: (ms: number) => Promise<void>;
+  /** An upload started earlier (say, before the app was closed) to carry on with. */
+  uploadId?: string;
+  /** Called with the upload's id once it exists, so the caller can save it and resume later. */
+  onCreated?: (id: string) => void | Promise<void>;
 }
 
 // Errors where retrying can't help.
@@ -34,10 +38,24 @@ const codeOf = (err: unknown) => {
 export async function uploadBlob(t: UploadTransport, blob: Blob, contentType: UploadContentType, opts: UploadOptions = {}) {
   const { onProgress, retries = 6, chunkBytes = LIMITS.uploadChunkBytes } = opts;
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-  const { id } = await t.create({ contentType, totalBytes: blob.size });
+  let id = '';
   let offset = 0;
+  if (opts.uploadId) {
+    // Unfinished uploads are kept for a day; an expired one starts over.
+    try {
+      offset = await t.offset(opts.uploadId);
+      id = opts.uploadId;
+    } catch (err) {
+      if (codeOf(err) !== 'not_found') throw err;
+    }
+  }
+  if (!id) {
+    ({ id } = await t.create({ contentType, totalBytes: blob.size }));
+    offset = 0;
+    await opts.onCreated?.(id);
+  }
   let failures = 0;
-  onProgress?.(0);
+  onProgress?.(offset / blob.size);
   while (offset < blob.size) {
     try {
       const state = await t.send(id, offset, blob.slice(offset, offset + chunkBytes, 'application/offset+octet-stream'));
