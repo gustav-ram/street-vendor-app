@@ -5,6 +5,7 @@ import MapView, { Circle, Marker } from 'react-native-maps';
 import { useTranslation } from 'react-i18next';
 import type { Precision } from '@streeteats/shared';
 import { ApiRequestError } from '@/api/client';
+import { SyncBar } from '@/components/sync';
 import { Button, Chip, Notice, Segmented } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
 import { useMyVendor } from '@/hooks/useMyVendor';
@@ -37,14 +38,15 @@ export default function GoLiveScreen() {
     syncLive(vendor.data.live);
   }, [vendor.data]);
 
-  if (vendor.isPending || needsOnboarding) {
+  if (needsOnboarding || (!vendor.data && !vendor.isError)) {
     return (
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <Text style={styles.muted}>…</Text>
       </ScrollView>
     );
   }
-  if (vendor.isError) {
+  // With no copy saved on the phone yet, there's nothing to show offline.
+  if (!vendor.data) {
     return (
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <Notice tone="error" text={te(vendor.error instanceof ApiRequestError ? vendor.error.code : 'internal')} />
@@ -81,6 +83,7 @@ export default function GoLiveScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Text style={styles.name}>{v.displayName}</Text>
+      <SyncBar savedAt={vendor.savedAt} />
       <Text accessibilityRole="header" style={[styles.banner, { backgroundColor: banner.bg, color: banner.fg }]}>
         {banner.text}
       </Text>

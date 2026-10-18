@@ -19,6 +19,7 @@ export default function DashboardLayout() {
       <Stack.Screen name="settings" options={{ title: t('settings.title') }} />
       <Stack.Screen name="photos" options={{ title: t('photos.title') }} />
       <Stack.Screen name="reviews" options={{ title: t('reviews.title') }} />
+      <Stack.Screen name="sync" options={{ title: t('sync.title') }} />
     </Stack>
   );
 }

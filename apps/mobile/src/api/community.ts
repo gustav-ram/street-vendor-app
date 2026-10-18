@@ -17,7 +17,7 @@ const json = (method: string, body?: unknown): RequestInit => ({ method, body: b
 type Ok = { ok: true };
 
 // Resumable uploads (see @streeteats/shared uploadBlob): a dropped connection resumes from what the server has.
-const uploadTransport: UploadTransport = {
+export const uploadTransport: UploadTransport = {
   create: (input) => authRequest<UploadState>('/v1/uploads', json('POST', input)),
   offset: async (id) => Number((await authResponse(`/v1/uploads/${id}`, { method: 'HEAD' })).headers.get('upload-offset') ?? 0),
   send: (id, offset, chunk) =>

@@ -2,12 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { MyPhoto, ReportTarget, VendorPhotoKind } from '@streeteats/shared';
+import type { MyPhoto, OutboxItem, ReportTarget, VendorPhotoKind } from '@streeteats/shared';
 import { vendorApi } from '@/api/vendor';
 import { mediaHeaders } from '@/auth/session';
 import { AddPhotoSheet, ReportSheet, useErrorText } from '@/components/community';
+import { PendingChip } from '@/components/sync';
 import { Button, Notice } from '@/components/ui';
 import { API_URL } from '@/config';
+import { queuePhoto, useOutboxItems } from '@/offline/outbox';
 import { colors, space, type } from '@/theme';
 
 const KEY = ['myPhotos'] as const;
@@ -34,6 +36,9 @@ export default function PhotosScreen() {
   const [adding, setAdding] = useState<VendorPhotoKind | null>(null);
   const [reporting, setReporting] = useState<{ type: ReportTarget; id: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Photos waiting in the outbox (no signal yet, or still uploading).
+  const queued = useOutboxItems().filter((i): i is OutboxItem & { action: { type: 'photo.add' } } => i.action.type === 'photo.add' && i.state === 'pending');
+  const queuedOf = (kind: VendorPhotoKind) => queued.filter((i) => i.action.payload.kind === kind);
 
   const refresh = () => void qc.invalidateQueries({ queryKey: KEY });
   async function run(fn: () => Promise<unknown>) {
@@ -90,6 +95,17 @@ export default function PhotosScreen() {
               </View>
             ))}
           </View>
+          {queuedOf('gallery').length + queuedOf('profile').length + queuedOf('cover').length > 0 && (
+            <View style={styles.grid}>
+              {queued.map((i) => (
+                <View key={i.id} style={styles.cell}>
+                  <Image source={{ uri: i.action.payload.fileUri }} style={[styles.thumb, { opacity: 0.7 }]} />
+                  <Text style={styles.caption}>{titles[i.action.payload.kind]}</Text>
+                  <PendingChip />
+                </View>
+              ))}
+            </View>
+          )}
           <Button label={t('photos.add')} onPress={() => setAdding('gallery')} />
 
           <Text style={styles.heading}>{t('photos.customer')}</Text>
@@ -125,10 +141,9 @@ export default function PhotosScreen() {
         title={adding ? titles[adding] : ''}
         hint={t('photos.warning')}
         successText={t('photos.added')}
-        upload={async (uploadId, caption) => {
-          if (!adding) return;
-          await vendorApi.photos.add(uploadId, adding, caption || undefined);
-          refresh();
+        // Through the offline outbox: saved on the phone first, uploaded when there's signal.
+        queue={async (uri, caption) => {
+          if (adding) await queuePhoto(uri, adding, caption || undefined);
         }}
       />
       <ReportSheet target={reporting} onClose={() => setReporting(null)} />

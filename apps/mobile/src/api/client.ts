@@ -10,8 +10,20 @@ export class ApiRequestError extends Error {
   }
 }
 
+/**
+ * Connection state as the app sees it. `simulateOffline` is a developer
+ * switch (Settings, dev builds only) that makes every request fail as if
+ * there were no signal, to try the offline mode without touching Wi-Fi.
+ */
+export const connection = {
+  simulateOffline: false,
+  /** Called after any request gets an answer from the server (so the outbox can flush). */
+  onReachable: null as null | (() => void),
+};
+
 /** The raw response (for headers such as Upload-Offset); throws ApiRequestError when it isn't OK. */
 export async function rawRequest(path: string, init: RequestInit = {}, token?: string | null): Promise<Response> {
+  if (connection.simulateOffline) throw new ApiRequestError('network', 0);
   const headers: Record<string, string> = { 'x-client': 'mobile' };
   if (init.body) headers['content-type'] = 'application/json';
   if (token) headers.authorization = `Bearer ${token}`;
@@ -21,6 +33,7 @@ export async function rawRequest(path: string, init: RequestInit = {}, token?: s
   } catch {
     throw new ApiRequestError('network', 0);
   }
+  connection.onReachable?.();
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new ApiRequestError(body?.error?.code ?? 'internal', res.status);

@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { signOut, useAuth } from '@/auth/session';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ServerStatus } from '@/components/ServerStatus';
-import { Button } from '@/components/ui';
+import { Button, Notice } from '@/components/ui';
 import { goOffline, isLiveHere } from '@/live/controller';
+import { useSyncSummary } from '@/offline/outbox';
 import { colors, space, type } from '@/theme';
 
 export default function AccountScreen() {
@@ -15,6 +16,7 @@ export default function AccountScreen() {
   const { t: ta } = useTranslation('auth');
   const { t: td } = useTranslation('dashboard');
   const { status, me } = useAuth();
+  const sync = useSyncSummary();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -30,6 +32,7 @@ export default function AccountScreen() {
             ) : (
               <Button variant="dark" label={`♥ ${t('nav.favorites')}`} onPress={() => router.push('/favorites')} style={{ alignSelf: 'stretch' }} />
             )}
+            {sync.pending > 0 && <Notice tone="warn" text={td('sync.signOutWarning', { count: sync.pending })} />}
             <Button
               variant="outline"
               label={ta('signOut')}

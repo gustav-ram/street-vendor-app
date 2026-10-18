@@ -1,45 +1,32 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { LIMITS } from '@streeteats/shared';
-import { vendorApi } from '@/api/vendor';
-import { Button, Chip, Field, Notice } from '@/components/ui';
+import { LIMITS, pendingEntityIds } from '@streeteats/shared';
+import { PendingChip, SyncBar } from '@/components/sync';
+import { Button, Chip, Field } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
-import { MY_VENDOR_KEY, useMyVendor } from '@/hooks/useMyVendor';
+import { useMyVendor } from '@/hooks/useMyVendor';
+import { enqueue, useOutboxItems } from '@/offline/outbox';
 import { colors, space, type } from '@/theme';
 
 const SUGGESTIONS = ['fresh', 'soldOut', 'specials', 'here'] as const;
 
+/** Short updates ("Sold out of onions"). Posted through the offline outbox, so they work without signal. */
 export default function StatusScreen() {
-  const qc = useQueryClient();
   const { t } = useTranslation('dashboard');
-  const { t: te } = useTranslation('errors');
   const f = useFormat();
   const vendor = useMyVendor();
+  const items = useOutboxItems();
+  const pending = useMemo(() => pendingEntityIds(items), [items]);
   const [body, setBody] = useState('');
   const [hours, setHours] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function act(fn: () => Promise<unknown>) {
-    setBusy(true);
-    setError(null);
-    try {
-      await fn();
-      await qc.invalidateQueries({ queryKey: MY_VENDOR_KEY });
-    } catch {
-      setError(te('network'));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   const posts = vendor.data?.statusPosts ?? [];
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <SyncBar savedAt={vendor.savedAt} />
         <Field label={t('status.title')} placeholder={t('status.placeholder')} value={body} onChangeText={setBody} maxLength={LIMITS.statusPostMax} multiline />
         <Text style={styles.counter}>
           {body.length}/{LIMITS.statusPostMax}
@@ -59,20 +46,17 @@ export default function StatusScreen() {
             </Chip>
           ))}
         </View>
-        {error && <Notice tone="error" text={error} />}
         <Button
           label={`📣 ${t('status.post')}`}
-          disabled={busy || !body.trim()}
-          onPress={() =>
-            void act(async () => {
-              await vendorApi.status.put(randomUUID(), {
-                body: body.trim(),
-                expiresInHours: hours ?? undefined,
-                clientUpdatedAt: new Date().toISOString(),
-              });
-              setBody('');
-            })
-          }
+          disabled={!body.trim()}
+          onPress={() => {
+            void enqueue({
+              type: 'status.put',
+              entityId: randomUUID(),
+              payload: { body: body.trim(), expiresInHours: hours ?? undefined, clientUpdatedAt: new Date().toISOString() },
+            });
+            setBody('');
+          }}
         />
 
         <Text style={styles.label}>{t('status.current')}</Text>
@@ -82,8 +66,12 @@ export default function StatusScreen() {
           posts.map((p) => (
             <View key={p.id} style={styles.post}>
               <Text style={styles.postBody}>📣 {p.body}</Text>
-              <Text style={styles.muted}>{t('status.until', { time: f.time(p.expiresAt) })}</Text>
-              <Button variant="outline" label={t('status.remove')} onPress={() => void act(() => vendorApi.status.remove(p.id))} />
+              {pending.has(p.id) ? <PendingChip /> : <Text style={styles.muted}>{t('status.until', { time: f.time(p.expiresAt) })}</Text>}
+              <Button
+                variant="outline"
+                label={t('status.remove')}
+                onPress={() => void enqueue({ type: 'status.delete', entityId: p.id, payload: { clientUpdatedAt: new Date().toISOString() } })}
+              />
             </View>
           ))
         )}

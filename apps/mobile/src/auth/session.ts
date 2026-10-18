@@ -50,8 +50,16 @@ async function adopt(res: AuthResponse) {
   set({ status: 'signedIn', me: res.user });
 }
 
+const signedOutListeners = new Set<() => void>();
+/** Runs when the session ends (sign out, or the server refused the refresh token). */
+export function onSignedOut(fn: () => void) {
+  signedOutListeners.add(fn);
+  return () => void signedOutListeners.delete(fn);
+}
+
 async function clear() {
   accessToken = null;
+  signedOutListeners.forEach((l) => l());
   await SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => {});
   try {
     Storage.removeItemSync(ME_KEY);

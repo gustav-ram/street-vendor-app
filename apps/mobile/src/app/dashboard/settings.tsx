@@ -16,6 +16,7 @@ import { ApiRequestError } from '@/api/client';
 import { vendorApi } from '@/api/vendor';
 import { Button, Chip, Field, Notice, Segmented } from '@/components/ui';
 import { useMyVendor, useSetMyVendor } from '@/hooks/useMyVendor';
+import { setSimulateOffline, useSimulateOffline } from '@/offline/outbox';
 import { colors, space, type } from '@/theme';
 
 function toggle<T>(list: T[], item: T, max = 99) {
@@ -150,13 +151,31 @@ export default function SettingsScreen() {
           onPress={() => void save()}
           disabled={busy || name.trim().length < 2 || categories.length === 0 || payments.length === 0}
         />
+
+        {__DEV__ && <SimulateOffline />}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+/** Developer tool: test offline mode without turning off the Mac's Wi-Fi. Not in release builds. */
+function SimulateOffline() {
+  const { t } = useTranslation('dashboard');
+  const on = useSimulateOffline();
+  return (
+    <View style={[styles.switchRow, styles.dev]}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.switchLabel}>🧪 {t('sync.simulateOffline')}</Text>
+        <Text style={styles.hint}>{t('sync.simulateOfflineHint')}</Text>
+      </View>
+      <Switch value={on} onValueChange={setSimulateOffline} accessibilityLabel={t('sync.simulateOffline')} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   content: { padding: space.md, gap: space.md, paddingBottom: space.xl * 3 },
+  dev: { borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inkSoft, marginTop: space.lg },
   label: { fontSize: type.body, fontWeight: '900', color: colors.ink },
   hint: { fontSize: type.small, color: colors.inkSoft },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

@@ -8,10 +8,13 @@ import type {
   MyPhotos,
   MyVendor,
   QuickStartInput,
+  ScheduleInput,
   StatusPostInput,
+  UpcomingPostInput,
   VendorPhotoKind,
   VendorProfileUpdate,
   VendorReview,
+  VerificationProgress,
   WriteResult,
 } from '@streeteats/shared';
 import { authRequest } from '@/auth/session';
@@ -31,22 +34,33 @@ export const vendorApi = {
     end: () => authRequest<LiveStatus>('/v1/vendor/live', json('DELETE')),
   },
 
+  // These carry the time the vendor made the change, so the offline outbox can send them later.
   menu: {
     put: (id: string, item: MenuItemInput) => authRequest<WriteResult>(`/v1/vendor/menu/${id}`, json('PUT', item)),
-    soldOut: (id: string, soldOut: boolean) =>
-      authRequest<WriteResult>(`/v1/vendor/menu/${id}/sold-out`, json('PUT', { soldOut, clientUpdatedAt: new Date().toISOString() })),
-    remove: (id: string) => authRequest<WriteResult>(`/v1/vendor/menu/${id}`, json('DELETE', { clientUpdatedAt: new Date().toISOString() })),
+    soldOut: (id: string, soldOut: boolean, clientUpdatedAt: string) =>
+      authRequest<WriteResult>(`/v1/vendor/menu/${id}/sold-out`, json('PUT', { soldOut, clientUpdatedAt })),
+    remove: (id: string, clientUpdatedAt: string) => authRequest<WriteResult>(`/v1/vendor/menu/${id}`, json('DELETE', { clientUpdatedAt })),
   },
 
   status: {
     put: (id: string, post: StatusPostInput) => authRequest<WriteResult>(`/v1/vendor/status/${id}`, json('PUT', post)),
-    remove: (id: string) => authRequest<WriteResult>(`/v1/vendor/status/${id}`, json('DELETE', { clientUpdatedAt: new Date().toISOString() })),
+    remove: (id: string, clientUpdatedAt: string) => authRequest<WriteResult>(`/v1/vendor/status/${id}`, json('DELETE', { clientUpdatedAt })),
   },
+
+  upcoming: {
+    // The spot goes only to our API, which publishes an approximate area unless the vendor chose "exact".
+    put: (id: string, post: UpcomingPostInput) => authRequest<WriteResult>(`/v1/vendor/upcoming/${id}`, json('PUT', post)),
+    remove: (id: string, clientUpdatedAt: string) => authRequest<WriteResult>(`/v1/vendor/upcoming/${id}`, json('DELETE', { clientUpdatedAt })),
+  },
+
+  schedule: (input: ScheduleInput) => authRequest<MyVendor>('/v1/vendor/schedule', json('PUT', input)),
+  verification: () => authRequest<VerificationProgress>('/v1/vendor/verification'),
 
   photos: {
     list: () => authRequest<MyPhotos>('/v1/vendor/photos'),
-    add: (uploadId: string, kind: VendorPhotoKind, caption?: string) =>
-      authRequest<{ id: string }>('/v1/vendor/photos', json('POST', { uploadId, kind, caption })),
+    /** `id` (made on the phone) lets a retried upload from the outbox add the photo only once. */
+    add: (uploadId: string, kind: VendorPhotoKind, caption?: string, id?: string) =>
+      authRequest<{ id: string }>('/v1/vendor/photos', json('POST', { id, uploadId, kind, caption })),
     remove: (id: string) => authRequest<{ ok: true }>(`/v1/vendor/photos/${id}`, json('DELETE')),
     hide: (id: string, hidden: boolean) => authRequest<{ ok: true }>(`/v1/vendor/customer-photos/${id}`, json('PATCH', { hidden })),
   },

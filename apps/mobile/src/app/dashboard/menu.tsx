@@ -1,45 +1,30 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { centsToInput, LIMITS, type MyMenuItem, type MyVendor, parsePriceToCents } from '@streeteats/shared';
-import { vendorApi } from '@/api/vendor';
-import { Button, Field, Notice } from '@/components/ui';
+import { centsToInput, LIMITS, type MyMenuItem, parsePriceToCents, pendingEntityIds } from '@streeteats/shared';
+import { PendingChip, SyncBar } from '@/components/sync';
+import { Button, Field } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
-import { MY_VENDOR_KEY, useMyVendor } from '@/hooks/useMyVendor';
+import { useMyVendor } from '@/hooks/useMyVendor';
+import { enqueue, useOutboxItems } from '@/offline/outbox';
 import { colors, space, touch, type } from '@/theme';
 
-/** Menu with one-tap "sold out". Edits are applied locally first, then sent. */
+/**
+ * Menu with one-tap "sold out". Every change goes through the offline
+ * outbox: it shows at once and is sent when there's signal.
+ */
 export default function MenuScreen() {
-  const qc = useQueryClient();
   const { t } = useTranslation('dashboard');
-  const { t: te } = useTranslation('errors');
   const f = useFormat();
   const vendor = useMyVendor();
+  const items = useOutboxItems();
+  const pending = useMemo(() => pendingEntityIds(items), [items]);
   const [editing, setEditing] = useState<MyMenuItem | 'new' | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  const patchCache = (fn: (menu: MyMenuItem[]) => MyMenuItem[]) =>
-    qc.setQueryData<MyVendor>(MY_VENDOR_KEY, (v) => (v ? { ...v, menu: fn(v.menu) } : v));
-  const resync = () => void qc.invalidateQueries({ queryKey: MY_VENDOR_KEY });
-
-  async function run(change: () => Promise<unknown>) {
-    setError(null);
-    try {
-      await change();
-    } catch {
-      setError(te('network'));
-    } finally {
-      resync();
-    }
-  }
-
-  const toggleSoldOut = (item: MyMenuItem, soldOut: boolean) => {
-    patchCache((menu) => menu.map((m) => (m.id === item.id ? { ...m, soldOut } : m)));
-    void run(() => vendorApi.menu.soldOut(item.id, soldOut));
-  };
+  const toggleSoldOut = (item: MyMenuItem, soldOut: boolean) =>
+    void enqueue({ type: 'menu.soldOut', entityId: item.id, payload: { soldOut, clientUpdatedAt: new Date().toISOString() } });
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
@@ -48,13 +33,14 @@ export default function MenuScreen() {
         data={vendor.data?.menu ?? []}
         keyExtractor={(m) => m.id}
         contentContainerStyle={{ padding: space.md, gap: space.sm }}
-        ListHeaderComponent={error ? <Notice tone="error" text={error} /> : undefined}
+        ListHeaderComponent={<SyncBar savedAt={vendor.savedAt} />}
         ListEmptyComponent={<Text style={styles.muted}>{t('menu.empty')}</Text>}
         renderItem={({ item }) => (
           <View style={[styles.row, item.soldOut && { opacity: 0.6 }]}>
             <Pressable accessibilityRole="button" onPress={() => setEditing(item)} style={{ flex: 1, gap: 2 }}>
               <Text style={[styles.name, item.soldOut && { textDecorationLine: 'line-through' }]}>{item.name}</Text>
               <Text style={styles.price}>{f.price(item.priceCents)}</Text>
+              {pending.has(item.id) && <PendingChip />}
             </Pressable>
             <View style={styles.toggle}>
               <Text style={[styles.toggleLabel, item.soldOut && { color: colors.chile }]}>
@@ -77,21 +63,21 @@ export default function MenuScreen() {
           onClose={() => setEditing(null)}
           onSave={(item) => {
             setEditing(null);
-            patchCache((menu) => (menu.some((m) => m.id === item.id) ? menu.map((m) => (m.id === item.id ? item : m)) : [...menu, item]));
-            void run(() =>
-              vendorApi.menu.put(item.id, {
+            void enqueue({
+              type: 'menu.put',
+              entityId: item.id,
+              payload: {
                 name: item.name,
                 description: item.description,
                 priceCents: item.priceCents,
                 soldOut: item.soldOut,
                 clientUpdatedAt: item.clientUpdatedAt,
-              }),
-            );
+              },
+            });
           }}
           onDelete={(id) => {
             setEditing(null);
-            patchCache((menu) => menu.filter((m) => m.id !== id));
-            void run(() => vendorApi.menu.remove(id));
+            void enqueue({ type: 'menu.delete', entityId: id, payload: { clientUpdatedAt: new Date().toISOString() } });
           }}
         />
       )}

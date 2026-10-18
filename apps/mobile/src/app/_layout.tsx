@@ -1,19 +1,29 @@
 import '@/i18n';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { initAuth } from '@/auth/session';
+import { initAuth, onSignedOut } from '@/auth/session';
+import { clearVendorCache } from '@/hooks/useMyVendor';
+import { queryClient } from '@/lib/queryClient';
+import { clearOutbox, startSync } from '@/offline/outbox';
 import { colors } from '@/theme';
 
 export default function RootLayout() {
   const { t } = useTranslation();
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }),
-  );
   useEffect(() => {
+    // Nothing about a vendor's business stays on a phone after they sign out.
+    const off = onSignedOut(() => {
+      void clearOutbox();
+      clearVendorCache();
+    });
+    const stop = startSync();
     void initAuth();
+    return () => {
+      off();
+      stop();
+    };
   }, []);
   return (
     <QueryClientProvider client={queryClient}>

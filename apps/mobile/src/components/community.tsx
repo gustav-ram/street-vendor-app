@@ -222,13 +222,16 @@ export function AddPhotoSheet({
   hint,
   successText,
   upload,
+  queue,
 }: {
   visible: boolean;
   onClose: () => void;
   title: string;
   hint: string;
   successText: string;
-  upload: (uploadId: string, caption: string) => Promise<void>;
+  upload?: (uploadId: string, caption: string) => Promise<void>;
+  /** Vendor photos: hand the (compressed) photo to the offline outbox instead of uploading now. */
+  queue?: (uri: string, caption: string) => Promise<void>;
 }) {
   const { t } = useTranslation('community');
   const errorText = useErrorText();
@@ -293,10 +296,15 @@ export function AddPhotoSheet({
             onPress={async () => {
               if (!photo) return;
               setError(null);
-              setProgress(0);
               try {
+                if (queue) {
+                  await queue(photo.uri, caption.trim());
+                  setDone(true);
+                  return;
+                }
+                setProgress(0);
                 const uploadId = await uploadFile(await readPhoto(photo.uri), 'image/jpeg', setProgress);
-                await upload(uploadId, caption.trim());
+                await upload?.(uploadId, caption.trim());
                 setDone(true);
               } catch (err) {
                 setError(errorText(err));
