@@ -2,10 +2,13 @@ import { and, asc, desc, eq, gt, inArray, max, sql } from 'drizzle-orm';
 import {
   CATEGORY_BASE_TAG,
   type Category,
+  type LatLng,
   LIMITS,
   type MyVendor,
   type Precision,
   type QuickStartInput,
+  type ScheduleInput,
+  type UpcomingPostInput,
   type VendorProfileUpdate,
 } from '@streeteats/shared';
 import type { FastifyRequest } from 'fastify';
@@ -14,14 +17,18 @@ import type { Db } from '../../db/client';
 import {
   deletedEntities,
   menuItems,
+  scheduleEntries,
   tags,
+  upcomingSpotPosts,
   vendorProfiles,
   vendorStatusPosts,
   vendorTags,
   verificationProgress,
 } from '../../db/schema';
 import { ApiError, isUniqueViolation } from '../../lib/errors';
-import { computeEndsAt, endLiveSession, getLiveStatus } from '../live/service';
+import { publicLocation } from '../../lib/geo/fuzz';
+import { pointSql } from '../../lib/geo/sql';
+import { computeEndsAt, endLiveSession, fuzzOptions, getLiveStatus } from '../live/service';
 
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 type Conn = Db | Tx;
@@ -131,13 +138,46 @@ export async function quickStart(ctx: AppContext, userId: string, input: QuickSt
 export async function getMyVendor(ctx: AppContext, vendorId: string): Promise<MyVendor> {
   const [v] = await ctx.db.select().from(vendorProfiles).where(eq(vendorProfiles.id, vendorId));
   if (!v) throw new ApiError('onboarding_required');
-  const [menu, posts, live] = await Promise.all([
+  const lat = (col: typeof upcomingSpotPosts.publicPoint | typeof scheduleEntries.publicPoint) => sql<number | null>`ST_Y(${col}::geometry)`;
+  const lng = (col: typeof upcomingSpotPosts.publicPoint | typeof scheduleEntries.publicPoint) => sql<number | null>`ST_X(${col}::geometry)`;
+  const [menu, posts, upcoming, schedule, live] = await Promise.all([
     ctx.db.select().from(menuItems).where(eq(menuItems.vendorId, vendorId)).orderBy(asc(menuItems.sortOrder), asc(menuItems.createdAt)),
     ctx.db
       .select()
       .from(vendorStatusPosts)
       .where(and(eq(vendorStatusPosts.vendorId, vendorId), gt(vendorStatusPosts.expiresAt, sql`now()`)))
       .orderBy(desc(vendorStatusPosts.createdAt)),
+    // Only the published (fuzzed) point exists; the vendor sees what customers see.
+    ctx.db
+      .select({
+        id: upcomingSpotPosts.id,
+        lat: lat(upcomingSpotPosts.publicPoint),
+        lng: lng(upcomingSpotPosts.publicPoint),
+        precision: upcomingSpotPosts.precision,
+        placeLabel: upcomingSpotPosts.placeLabel,
+        note: upcomingSpotPosts.note,
+        startsAt: upcomingSpotPosts.startsAt,
+        endsAt: upcomingSpotPosts.endsAt,
+        clientUpdatedAt: upcomingSpotPosts.clientUpdatedAt,
+      })
+      .from(upcomingSpotPosts)
+      .where(and(eq(upcomingSpotPosts.vendorId, vendorId), gt(upcomingSpotPosts.endsAt, sql`now()`)))
+      .orderBy(asc(upcomingSpotPosts.startsAt)),
+    ctx.db
+      .select({
+        id: scheduleEntries.id,
+        weekday: scheduleEntries.weekday,
+        startTime: scheduleEntries.startTime,
+        endTime: scheduleEntries.endTime,
+        placeLabel: scheduleEntries.placeLabel,
+        precision: scheduleEntries.precision,
+        published: scheduleEntries.published,
+        lat: lat(scheduleEntries.publicPoint),
+        lng: lng(scheduleEntries.publicPoint),
+      })
+      .from(scheduleEntries)
+      .where(eq(scheduleEntries.vendorId, vendorId))
+      .orderBy(asc(scheduleEntries.weekday), asc(scheduleEntries.startTime)),
     getLiveStatus(ctx, vendorId),
   ]);
   return {
@@ -163,6 +203,26 @@ export async function getMyVendor(ctx: AppContext, vendorId: string): Promise<My
       clientUpdatedAt: m.clientUpdatedAt.toISOString(),
     })),
     statusPosts: posts.map((p) => ({ id: p.id, body: p.body, expiresAt: p.expiresAt.toISOString(), createdAt: p.createdAt.toISOString() })),
+    upcoming: upcoming.map((u) => ({
+      id: u.id,
+      location: { lat: Number(u.lat), lng: Number(u.lng), precision: u.precision },
+      placeLabel: u.placeLabel,
+      note: u.note,
+      startsAt: u.startsAt.toISOString(),
+      endsAt: u.endsAt.toISOString(),
+      clientUpdatedAt: u.clientUpdatedAt.toISOString(),
+    })),
+    schedule: {
+      published: schedule.some((e) => e.published),
+      entries: schedule.map((e) => ({
+        id: e.id,
+        weekday: e.weekday,
+        startTime: e.startTime.slice(0, 5),
+        endTime: e.endTime.slice(0, 5),
+        placeLabel: e.placeLabel,
+        location: e.lat === null ? null : { lat: Number(e.lat), lng: Number(e.lng), precision: e.precision },
+      })),
+    },
     live,
   };
 }
@@ -188,7 +248,7 @@ export async function updateProfile(ctx: AppContext, vendor: VendorRef, patch: V
 // timestamp is re-applied, so an outbox retrying the exact same request
 // still gets "applied".
 
-type Kind = 'menu_item' | 'status_post';
+type Kind = 'menu_item' | 'status_post' | 'upcoming_post';
 export type WriteOutcome = 'applied' | 'superseded';
 
 /**
@@ -336,4 +396,96 @@ export async function deleteStatusPost(ctx: AppContext, vendorId: string, id: st
     await recordDelete(tx, id, vendorId, 'status_post', at);
     return 'applied';
   });
+}
+
+// ---------------------------------------------------------------- "where I'll be tomorrow"
+
+/**
+ * The spot goes through the same fuzzing as a live location: in approximate
+ * mode only the snapped point is stored, never what the phone sent.
+ */
+function publicSpot(ctx: AppContext, vendorId: string, point: LatLng, precision: Precision) {
+  const loc = publicLocation(point, precision, vendorId, fuzzOptions(ctx));
+  return { publicPoint: pointSql(loc), precision, cellKey: loc.cellKey };
+}
+
+export async function upsertUpcomingPost(ctx: AppContext, vendor: VendorRef, id: string, input: UpcomingPostInput): Promise<WriteOutcome> {
+  const at = clientTime(input.clientUpdatedAt);
+  const startsAt = new Date(input.startsAt);
+  const endsAt = new Date(input.endsAt);
+  const now = Date.now();
+  // Queued offline for too long: tell the vendor rather than post the past.
+  if (endsAt.getTime() <= now) throw new ApiError('window_ended');
+  if (endsAt.getTime() - startsAt.getTime() > LIMITS.upcomingWindowMaxHours * 3_600_000) throw new ApiError('validation_failed');
+  if (startsAt.getTime() > now + LIMITS.upcomingDaysAhead * 86_400_000) throw new ApiError('validation_failed');
+  const spot = publicSpot(ctx, vendor.id, input.location, input.precision ?? vendor.defaultPrecision);
+
+  return ctx.db.transaction(async (tx) => {
+    if (await deletedLater(tx, id, vendor.id, at)) return 'superseded';
+    const [existing] = await tx
+      .select({ vendorId: upcomingSpotPosts.vendorId, clientUpdatedAt: upcomingSpotPosts.clientUpdatedAt })
+      .from(upcomingSpotPosts)
+      .where(eq(upcomingSpotPosts.id, id))
+      .for('update');
+    if (existing && existing.vendorId !== vendor.id) throw new ApiError('not_found');
+    if (existing && existing.clientUpdatedAt > at) return 'superseded';
+    const fields = {
+      ...spot,
+      placeLabel: input.placeLabel || null,
+      note: input.note || null,
+      startsAt,
+      endsAt,
+      clientUpdatedAt: at,
+      updatedAt: new Date(),
+    };
+    if (existing) {
+      await tx.update(upcomingSpotPosts).set(fields).where(eq(upcomingSpotPosts.id, id));
+    } else {
+      const active = await tx.$count(upcomingSpotPosts, and(eq(upcomingSpotPosts.vendorId, vendor.id), gt(upcomingSpotPosts.endsAt, sql`now()`)));
+      if (active >= LIMITS.upcomingPostsMax) throw new ApiError('validation_failed');
+      await tx.insert(upcomingSpotPosts).values({ id, vendorId: vendor.id, ...fields });
+    }
+    return 'applied';
+  });
+}
+
+export async function deleteUpcomingPost(ctx: AppContext, vendorId: string, id: string, clientUpdatedAt: string): Promise<WriteOutcome> {
+  const at = clientTime(clientUpdatedAt);
+  return ctx.db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ vendorId: upcomingSpotPosts.vendorId, clientUpdatedAt: upcomingSpotPosts.clientUpdatedAt })
+      .from(upcomingSpotPosts)
+      .where(eq(upcomingSpotPosts.id, id))
+      .for('update');
+    if (existing && existing.vendorId !== vendorId) throw new ApiError('not_found');
+    if (existing && existing.clientUpdatedAt > at) return 'superseded';
+    if (existing) await tx.delete(upcomingSpotPosts).where(eq(upcomingSpotPosts.id, id));
+    await recordDelete(tx, id, vendorId, 'upcoming_post', at);
+    return 'applied';
+  });
+}
+
+// ---------------------------------------------------------------- weekly schedule
+
+/** Replaces the whole weekly schedule. Spots are fuzzed like everything else. */
+export async function putSchedule(ctx: AppContext, vendor: VendorRef, input: ScheduleInput) {
+  const entries = input.entries.map((e) => {
+    if (e.startTime === e.endTime) throw new ApiError('validation_failed');
+    const precision = e.precision ?? vendor.defaultPrecision;
+    const spot = e.location ? publicSpot(ctx, vendor.id, e.location, precision) : { publicPoint: null, precision, cellKey: null };
+    return {
+      vendorId: vendor.id,
+      weekday: e.weekday,
+      startTime: e.startTime,
+      endTime: e.endTime,
+      placeLabel: e.placeLabel || null,
+      published: input.published,
+      ...spot,
+    };
+  });
+  await ctx.db.transaction(async (tx) => {
+    await tx.delete(scheduleEntries).where(eq(scheduleEntries.vendorId, vendor.id));
+    if (entries.length) await tx.insert(scheduleEntries).values(entries);
+  });
+  return getMyVendor(ctx, vendor.id);
 }

@@ -9,8 +9,10 @@ import {
   menuItemInputSchema,
   myVendorSchema,
   quickStartSchema,
+  scheduleInputSchema,
   soldOutInputSchema,
   statusPostInputSchema,
+  upcomingPostInputSchema,
   vendorProfileUpdateSchema,
   writeResultSchema,
 } from '@streeteats/shared';
@@ -102,6 +104,32 @@ export const dashboardRoutes: FastifyPluginAsyncZod = async (app) => {
       const vendor = await requireVendor(request);
       return { result: await dash.deleteStatusPost(ctx, vendor.id, request.params.id, request.body.clientUpdatedAt) };
     },
+  );
+
+  // ---------------------------------------------------------------- "where I'll be tomorrow" and the weekly schedule
+
+  app.put(
+    '/vendor/upcoming/:id',
+    { schema: { params: idParams, body: upcomingPostInputSchema, response: { 200: writeResultSchema } } },
+    async (request) => {
+      const vendor = await requireVendor(request);
+      return { result: await dash.upsertUpcomingPost(ctx, vendor, request.params.id, request.body) };
+    },
+  );
+
+  app.delete(
+    '/vendor/upcoming/:id',
+    { schema: { params: idParams, body: deleteInputSchema, response: { 200: writeResultSchema } } },
+    async (request) => {
+      const vendor = await requireVendor(request);
+      return { result: await dash.deleteUpcomingPost(ctx, vendor.id, request.params.id, request.body.clientUpdatedAt) };
+    },
+  );
+
+  app.put(
+    '/vendor/schedule',
+    { schema: { body: scheduleInputSchema, response: { 200: myVendorSchema } } },
+    async (request) => dash.putSchedule(ctx, await requireVendor(request), request.body),
   );
 
   // ---------------------------------------------------------------- live (Go Live / heartbeat / close)

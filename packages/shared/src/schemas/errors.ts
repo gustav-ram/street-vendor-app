@@ -19,6 +19,8 @@ export const ERROR_CODES = [
   'not_live',
   'live_elsewhere',
   'vacation_mode',
+  // A "tomorrow" post whose time window had already ended (say, queued offline too long).
+  'window_ended',
   // Photos and uploads
   'unsupported_media',
   'image_too_large',

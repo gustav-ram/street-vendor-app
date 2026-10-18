@@ -91,6 +91,15 @@ export const LIMITS = {
   /** Upload chunk size the clients use; the server accepts up to twice this per request. */
   uploadChunkBytes: 512 * 1024,
   reviewReplyMax: 500,
+  upcomingNoteMax: 140,
+  /** Active "tomorrow" posts per vendor. */
+  upcomingPostsMax: 10,
+  /** How long one posted time window can be. */
+  upcomingWindowMaxHours: 16,
+  /** How far ahead a "tomorrow" post can be. */
+  upcomingDaysAhead: 14,
+  scheduleEntriesMax: 14,
+  revokeReasonMax: 300,
 } as const;
 
 export const UPLOAD_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;

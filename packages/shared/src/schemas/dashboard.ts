@@ -100,6 +100,48 @@ export const statusPostInputSchema = z.object({
 });
 export type StatusPostInput = z.input<typeof statusPostInputSchema>;
 
+const isoTime = z.iso.datetime({ offset: true });
+const clockTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+/**
+ * "Where I'll be tomorrow". The spot is published like a live location:
+ * fuzzed to an approximate area unless the vendor picks "exact".
+ */
+export const upcomingPostInputSchema = z
+  .object({
+    location: latLngSchema,
+    /** Default: the vendor's usual choice (approximate unless they changed it). */
+    precision: z.enum(PRECISIONS).optional(),
+    placeLabel: z.string().trim().max(LIMITS.placeLabelMax).nullable().optional(),
+    note: z.string().trim().max(LIMITS.upcomingNoteMax).nullable().optional(),
+    startsAt: isoTime,
+    endsAt: isoTime,
+    clientUpdatedAt: clientTimeSchema,
+  })
+  .refine((p) => new Date(p.endsAt) > new Date(p.startsAt), { path: ['endsAt'], message: 'ends_before_start' });
+export type UpcomingPostInput = z.input<typeof upcomingPostInputSchema>;
+
+export const scheduleEntryInputSchema = z.object({
+  /** 0 = Sunday ... 6 = Saturday, in the vendor's timezone. */
+  weekday: z.number().int().min(0).max(6),
+  startTime: clockTime,
+  /** Earlier than startTime means the slot runs past midnight. */
+  endTime: clockTime,
+  /** Optional spot. Without one the slot is shown as text only and isn't on the map. */
+  location: latLngSchema.nullable().optional(),
+  precision: z.enum(PRECISIONS).optional(),
+  placeLabel: z.string().trim().max(LIMITS.placeLabelMax).nullable().optional(),
+});
+export type ScheduleEntryInput = z.input<typeof scheduleEntryInputSchema>;
+
+/** The whole weekly schedule at once (online only; it rarely changes). */
+export const scheduleInputSchema = z.object({
+  entries: z.array(scheduleEntryInputSchema).max(LIMITS.scheduleEntriesMax),
+  /** Shown to customers (profile and Upcoming) only when true. */
+  published: z.boolean(),
+});
+export type ScheduleInput = z.input<typeof scheduleInputSchema>;
+
 export const writeResultSchema = z.object({
   /** "superseded": a newer change (or a delete) already won; nothing was written. */
   result: z.enum(['applied', 'superseded']),
@@ -125,6 +167,28 @@ export const myStatusPostSchema = z.object({
 });
 export type MyStatusPost = z.infer<typeof myStatusPostSchema>;
 
+export const myUpcomingPostSchema = z.object({
+  id: z.uuid(),
+  /** What customers see: the fuzzed point in approximate mode. */
+  location: publicPointSchema,
+  placeLabel: z.string().nullable(),
+  note: z.string().nullable(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  clientUpdatedAt: z.string(),
+});
+export type MyUpcomingPost = z.infer<typeof myUpcomingPostSchema>;
+
+export const myScheduleEntrySchema = z.object({
+  id: z.uuid(),
+  weekday: z.number().int().min(0).max(6),
+  startTime: z.string(),
+  endTime: z.string(),
+  placeLabel: z.string().nullable(),
+  location: publicPointSchema.nullable(),
+});
+export type MyScheduleEntry = z.infer<typeof myScheduleEntrySchema>;
+
 /** The signed-in vendor's own business, including private settings. */
 export const myVendorSchema = z.object({
   id: z.uuid(),
@@ -141,6 +205,8 @@ export const myVendorSchema = z.object({
   hidden: z.boolean(),
   menu: z.array(myMenuItemSchema),
   statusPosts: z.array(myStatusPostSchema),
+  upcoming: z.array(myUpcomingPostSchema),
+  schedule: z.object({ published: z.boolean(), entries: z.array(myScheduleEntrySchema) }),
   live: liveStatusSchema,
 });
 export type MyVendor = z.infer<typeof myVendorSchema>;

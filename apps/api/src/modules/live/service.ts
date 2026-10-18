@@ -31,7 +31,7 @@ export function computeEndsAt(ctx: AppContext, now: Date, timezone: string, auto
   return new Date(Math.min(...candidates));
 }
 
-function fuzzOptions(ctx: AppContext) {
+export function fuzzOptions(ctx: AppContext) {
   return { secret: ctx.config.fuzzSecret, cellMeters: ctx.config.approxCellMeters };
 }
 
