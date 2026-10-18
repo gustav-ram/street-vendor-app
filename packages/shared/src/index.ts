@@ -8,3 +8,4 @@ export * from './schemas/errors';
 export * from './schemas/vendor';
 export * from './schemas/search';
 export * from './schemas/dashboard';
+export * from './live/controller';

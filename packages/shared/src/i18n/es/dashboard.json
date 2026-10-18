@@ -48,7 +48,14 @@
     "locationNeeded": "Para aparecer en el mapa, StreetEats necesita tu ubicación mientras la app está abierta. Solo se comparte mientras estás abierto y se borra al cerrar.",
     "locationDenied": "La ubicación está apagada para StreetEats. Actívala en Configuración para aparecer en el mapa.",
     "vacationOn": "El modo vacaciones está activado, así que no puedes abrir. Apágalo en Mi perfil.",
-    "seeOnMap": "Esto es lo que ven los clientes"
+    "seeOnMap": "Esto es lo que ven los clientes",
+    "stateElsewhere": "EN VIVO desde otro teléfono o navegador",
+    "elsewhereBody": "Tu puesto está en el mapa desde otro dispositivo. Este no compartirá su ubicación a menos que muevas el puesto aquí.",
+    "takeOver": "Usar la ubicación de este dispositivo",
+    "locationUnavailable": "No pudimos obtener tu ubicación. Revisa que la ubicación esté activada e inténtalo de nuevo.",
+    "locationDeniedWeb": "Tu navegador está bloqueando la ubicación para este sitio. Permítela en la configuración del sitio (junto a la barra de direcciones) e inténtalo de nuevo.",
+    "keepOpenWeb": "Deja esta página abierta y en pantalla mientras estés abierto. Si cambias a otra o pierdes señal por más de {{minutes}} minutos, te desconectarás solo.",
+    "wentOfflineAutoWeb": "Te desconectaste automáticamente porque esta página se ocultó o perdió señal. Presiona \"Estoy abierto\" para volver al mapa."
   },
   "actions": {
     "postUpdate": "Publicar un aviso",
@@ -100,5 +107,11 @@
     "vacationHint": "Oculta tu página y no podrás abrir hasta que lo apagues.",
     "save": "Guardar cambios",
     "saved": "Guardado"
+  },
+  "web": {
+    "signInNeeded": "Inicia sesión con tu cuenta de vendedor para administrar tu puesto.",
+    "vendorsOnly": "Esta página es para vendedores. Iniciaste sesión con una cuenta de cliente.",
+    "back": "Mi puesto",
+    "liveTitle": "Abrir o cerrar"
   }
 }

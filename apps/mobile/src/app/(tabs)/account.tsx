@@ -6,6 +6,7 @@ import { signOut, useAuth } from '@/auth/session';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ServerStatus } from '@/components/ServerStatus';
 import { Button } from '@/components/ui';
+import { goOffline, isLiveHere } from '@/live/controller';
 import { colors, space, type } from '@/theme';
 
 export default function AccountScreen() {
@@ -29,7 +30,16 @@ export default function AccountScreen() {
             ) : (
               <Text style={styles.muted}>{ta('customerSoon')}</Text>
             )}
-            <Button variant="outline" label={ta('signOut')} onPress={() => void signOut()} style={{ alignSelf: 'stretch' }} />
+            <Button
+              variant="outline"
+              label={ta('signOut')}
+              onPress={async () => {
+                // Signing out closes the stand first, so the location isn't left up for the grace period.
+                if (isLiveHere()) await goOffline();
+                await signOut();
+              }}
+              style={{ alignSelf: 'stretch' }}
+            />
           </View>
         ) : (
           <>

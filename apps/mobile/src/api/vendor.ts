@@ -1,5 +1,6 @@
 import type {
   GoLiveInput,
+  HeartbeatInput,
   LiveStatus,
   MenuItemInput,
   MyVendor,
@@ -21,7 +22,7 @@ export const vendorApi = {
     status: () => authRequest<LiveStatus>('/v1/vendor/live'),
     // Exact device coordinates go only to our API, which fuzzes them before storing.
     start: (input: GoLiveInput) => authRequest<LiveStatus>('/v1/vendor/live', json('POST', input)),
-    heartbeat: (location: { lat: number; lng: number }) => authRequest<LiveStatus>('/v1/vendor/live/heartbeat', json('POST', { location })),
+    heartbeat: (input: HeartbeatInput) => authRequest<LiveStatus>('/v1/vendor/live/heartbeat', json('POST', input)),
     end: () => authRequest<LiveStatus>('/v1/vendor/live', json('DELETE')),
   },
 

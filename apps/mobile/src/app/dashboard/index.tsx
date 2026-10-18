@@ -9,7 +9,7 @@ import { Button, Chip, Notice, Segmented } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
 import { useMyVendor } from '@/hooks/useMyVendor';
 import { useNow } from '@/hooks/useNow';
-import { dismissNotice, goLive, goOffline, syncLive, useLive } from '@/live/controller';
+import { dismissNotice, goLive, goOffline, syncLive, takeOver, useLive } from '@/live/controller';
 import { colors, space, type } from '@/theme';
 
 type AutoOff = 2 | 4 | 8 | null;
@@ -37,13 +37,19 @@ export default function GoLiveScreen() {
     syncLive(vendor.data.live);
   }, [vendor.data]);
 
-  if (vendor.isPending || needsOnboarding) return <Text style={[styles.muted, { padding: space.md }]}>…</Text>;
+  if (vendor.isPending || needsOnboarding) {
+    return (
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <Text style={styles.muted}>…</Text>
+      </ScrollView>
+    );
+  }
   if (vendor.isError) {
     return (
-      <View style={{ padding: space.md, gap: space.md }}>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <Notice tone="error" text={te(vendor.error instanceof ApiRequestError ? vendor.error.code : 'internal')} />
         <Button variant="dark" label={tc('actions.retry')} onPress={() => void vendor.refetch()} />
-      </View>
+      </ScrollView>
     );
   }
 
@@ -58,13 +64,16 @@ export default function GoLiveScreen() {
       ? { text: t('live.stateLive'), bg: colors.live, fg: colors.white }
       : live.phase === 'reconnecting'
         ? { text: t('live.stateReconnecting'), bg: colors.marigold, fg: colors.ink }
-        : { text: t('live.stateOffline'), bg: colors.sand, fg: colors.ink };
+        : live.phase === 'elsewhere'
+          ? { text: t('live.stateElsewhere'), bg: colors.live, fg: colors.white }
+          : { text: t('live.stateOffline'), bg: colors.sand, fg: colors.ink };
 
   const notices: Record<NonNullable<typeof live.notice>, { text: string; tone: 'info' | 'warn' | 'error' }> = {
     autoOffline: { text: t('live.wentOfflineAuto'), tone: 'warn' },
     timerEnded: { text: t('live.timerEnded'), tone: 'info' },
     offlinePending: { text: t('live.offlinePending', { minutes: graceMin }), tone: 'warn' },
     locationDenied: { text: t('live.locationDenied'), tone: 'error' },
+    locationUnavailable: { text: t('live.locationUnavailable'), tone: 'error' },
     vacation: { text: t('live.vacationOn'), tone: 'error' },
     error: { text: te('internal'), tone: 'error' },
   };
@@ -85,13 +94,15 @@ export default function GoLiveScreen() {
         </View>
       )}
 
-      {isOn && live.status?.location ? (
+      {(isOn || live.phase === 'elsewhere') && live.status?.location ? (
         <View style={{ gap: space.sm }}>
           <Text style={styles.label}>{t('live.seeOnMap')}</Text>
           <MapView
+            // Remount when the public point moves (another device, a new cell) so the zoom stays put.
+            key={`${live.status.location.lat},${live.status.location.lng}`}
             style={styles.miniMap}
             pointerEvents="none"
-            region={{ latitude: live.status.location.lat, longitude: live.status.location.lng, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
+            initialRegion={{ latitude: live.status.location.lat, longitude: live.status.location.lng, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
           >
             {live.status.location.precision === 'approximate' && (
               <Circle
@@ -107,12 +118,24 @@ export default function GoLiveScreen() {
             📍 {live.status.location.precision === 'approximate' ? t('live.approximate') : t('live.exact')}
           </Text>
           {live.status.endsAt && <Text style={styles.body}>⏰ {t('live.closesAt', { time: f.time(live.status.endsAt) })}</Text>}
-          {sinceOk !== null && (
+          {isOn && sinceOk !== null && (
             <Text style={styles.muted}>
               {t('live.lastUpdate', { when: sinceOk < 5 ? t('live.justNow') : t('live.secondsAgo', { count: sinceOk }) })}
             </Text>
           )}
-          <Notice text={t('live.keepOpen', { minutes: graceMin })} />
+          {isOn ? (
+            <Notice text={t('live.keepOpen', { minutes: graceMin })} />
+          ) : (
+            <>
+              <Notice text={t('live.elsewhereBody')} />
+              <Button
+                variant="outline"
+                label={`📍 ${t('live.takeOver')}`}
+                onPress={() => void takeOver(live.status?.location?.precision ?? precision)}
+                disabled={busy}
+              />
+            </>
+          )}
           <Button label={busy ? t('live.stopping') : `■ ${t('live.goOffline')}`} onPress={() => void goOffline()} disabled={busy} style={styles.bigButton} />
         </View>
       ) : (

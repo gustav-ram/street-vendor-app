@@ -48,7 +48,14 @@
     "locationNeeded": "To go live, StreetEats needs your location while the app is open. It's only shared while you're live and deleted when you close.",
     "locationDenied": "Location is off for StreetEats. Turn it on in Settings to go live.",
     "vacationOn": "Vacation mode is on, so you can't go live. Turn it off in My profile.",
-    "seeOnMap": "This is what customers see"
+    "seeOnMap": "This is what customers see",
+    "stateElsewhere": "LIVE from another phone or browser",
+    "elsewhereBody": "Your stand is on the map from another device. This one won't share its location unless you move the stand here.",
+    "takeOver": "Use this device's location",
+    "locationUnavailable": "We couldn't get your location. Check that location is on, then try again.",
+    "locationDeniedWeb": "Your browser is blocking location for this site. Allow it in the site settings (next to the address bar), then try again.",
+    "keepOpenWeb": "Keep this page open and on screen while you're open. If you switch away or lose signal for more than {{minutes}} minutes, you'll go offline on your own.",
+    "wentOfflineAutoWeb": "You went offline automatically because this page was hidden or lost signal. Press \"I'm open\" to go back on the map."
   },
   "actions": {
     "postUpdate": "Post an update",
@@ -100,5 +107,11 @@
     "vacationHint": "Hide your page and stop going live until you turn this off.",
     "save": "Save changes",
     "saved": "Saved"
+  },
+  "web": {
+    "signInNeeded": "Sign in with your vendor account to manage your stand.",
+    "vendorsOnly": "This page is for vendors. You're signed in with a customer account.",
+    "back": "My stand",
+    "liveTitle": "Open or close"
   }
 }
