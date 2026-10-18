@@ -9,12 +9,22 @@ export function AccountLinks({ lang }: { lang: string }) {
   const { t } = useTranslation("auth");
   const { t: tc } = useTranslation();
   const { t: td } = useTranslation("dashboard");
+  const { t: tm } = useTranslation("community");
+  const { t: tad } = useTranslation("admin");
   const { status, me, signOut } = useAuth();
 
   if (status === "loading") return null;
   if (status === "signedIn" && me) {
     return (
       <nav className="flex items-center gap-3 text-base font-bold">
+        <Link href={`/${lang}/favorites`} className="hidden underline-offset-4 hover:underline sm:inline">
+          ♥ {tm("favorites.title")}
+        </Link>
+        {me.role === "admin" && (
+          <Link href={`/${lang}/admin`} className="rounded-full bg-ink px-4 py-2 text-white">
+            {tad("title")}
+          </Link>
+        )}
         {me.role === "vendor" && (
           <Link href={`/${lang}/vendor`} className="rounded-full bg-chile px-4 py-2 text-white">
             {td("title")}

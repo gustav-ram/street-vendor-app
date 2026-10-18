@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, LANGUAGES, PAYMENT_METHODS } from '../constants';
+import { CATEGORIES, LANGUAGES, PAYMENT_METHODS, REPORT_REASONS, REPORT_TARGETS } from '../constants';
 import { ERROR_CODES } from '../schemas/errors';
 import { parseAcceptLanguage, pickLocale, resources } from './index';
 
@@ -30,13 +30,17 @@ describe('translations', () => {
     }
   });
 
-  it('has a label for every category, payment method, spoken language and API error code', () => {
+  it('has a label for every category, payment method, spoken language, API error code and report reason', () => {
     for (const lng of ['en', 'es'] as const) {
       const c = resources[lng].catalog as Tree;
       for (const k of CATEGORIES) expect((c.categories as Tree)[k], `${lng} category ${k}`).toBeTypeOf('string');
       for (const k of PAYMENT_METHODS) expect((c.payments as Tree)[k], `${lng} payment ${k}`).toBeTypeOf('string');
       for (const k of LANGUAGES) expect((c.languages as Tree)[k], `${lng} language ${k}`).toBeTypeOf('string');
       for (const k of ERROR_CODES) expect((resources[lng].errors as Tree)[k], `${lng} error ${k}`).toBeTypeOf('string');
+      const reasons = (resources[lng].community as Tree).report as Tree;
+      for (const k of REPORT_REASONS) expect((reasons.reasons as Tree)[k], `${lng} report reason ${k}`).toBeTypeOf('string');
+      const targets = (resources[lng].admin as Tree).targets as Tree;
+      for (const k of REPORT_TARGETS) expect(targets[k], `${lng} report target ${k}`).toBeTypeOf('string');
     }
   });
 });

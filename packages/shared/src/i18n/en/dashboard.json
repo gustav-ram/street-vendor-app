@@ -60,7 +60,9 @@
   "actions": {
     "postUpdate": "Post an update",
     "menu": "Menu & sold out",
-    "profile": "My profile"
+    "profile": "My profile",
+    "photos": "Photos",
+    "reviews": "Reviews"
   },
   "status": {
     "title": "Post an update",
@@ -113,5 +115,37 @@
     "vendorsOnly": "This page is for vendors. You're signed in with a customer account.",
     "back": "My stand",
     "liveTitle": "Open or close"
+  },
+  "photos": {
+    "title": "Photos",
+    "profile": "Profile photo",
+    "cover": "Cover photo",
+    "gallery": "Food and items",
+    "customer": "From customers",
+    "add": "+ Add photo",
+    "replace": "Replace",
+    "delete": "Delete",
+    "confirmDelete": "Delete this photo?",
+    "hide": "Hide from my page",
+    "unhide": "Show on my page",
+    "hidden": "Hidden",
+    "warning": "Please no faces or license plates. We remove location and camera details from every photo.",
+    "empty": "No photos yet.",
+    "customerEmpty": "No customer photos yet. They appear here after a moderator approves them.",
+    "added": "Photo added."
+  },
+  "reviews": {
+    "title": "Reviews",
+    "empty": "No reviews yet.",
+    "reply": "Reply publicly",
+    "editReply": "Edit reply",
+    "replyPlaceholder": "Thank them, or explain what happened.",
+    "sendReply": "Post reply",
+    "deleteReply": "Delete reply",
+    "block": "Block this person",
+    "blocked": "Blocked",
+    "blockHint": "Blocked people can't review you, add photos to your page or confirm you. Reviews they already wrote stay up unless a moderator removes them.",
+    "blocks": "Blocked people",
+    "unblock": "Unblock"
   }
 }

@@ -158,7 +158,7 @@ function ItemForm({
         {onDelete && (
           <button
             type="button"
-            className={`${buttonClass.outline} ml-auto ${confirmDelete ? "border-chile bg-chile text-white hover:bg-chile-dark" : ""}`}
+            className={`${confirmDelete ? buttonClass.danger : buttonClass.outline} ml-auto`}
             onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
           >
             🗑 {confirmDelete ? `${t("menu.delete")}?` : t("menu.delete")}

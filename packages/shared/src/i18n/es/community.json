@@ -1,0 +1,85 @@
+{
+  "favorite": {
+    "add": "Guardar",
+    "saved": "Guardado",
+    "addLabel": "Guardar en favoritos",
+    "removeLabel": "Quitar de favoritos",
+    "notify": "Avísame cuando abra",
+    "notifyHint": "Queda guardado; los avisos llegan en una versión futura. Tu ubicación se quedará en tu teléfono.",
+    "signIn": "Inicia sesión para guardar favoritos"
+  },
+  "favorites": {
+    "title": "Favoritos",
+    "empty": "Todavía no tienes favoritos. Toca ♡ Guardar en la página de un vendedor para tenerlo aquí.",
+    "signIn": "Inicia sesión para ver tus favoritos.",
+    "next": "Próximo: {{when}}",
+    "notifyOn": "Avisar cuando abra"
+  },
+  "stillHere": {
+    "question": "¿Está aquí ahora mismo?",
+    "yes": "Sí, aquí está",
+    "thanks": "¡Gracias! Confirmaste que está aquí.",
+    "already": "Ya confirmaste hoy. ¡Gracias!",
+    "locationNote": "Usamos tu ubicación una vez para ver que estás cerca. Nunca se guarda.",
+    "customerConfirmed": "Un cliente confirmó que está aquí hace {{count}} min",
+    "signIn": "Inicia sesión para confirmar",
+    "checking": "Revisando…",
+    "needLocation": "Permite la ubicación para este sitio para confirmar. Se usa una vez para ver que estás cerca y nunca se guarda.",
+    "customerConfirmedJustNow": "Un cliente acaba de confirmar que está aquí"
+  },
+  "reviews": {
+    "write": "Escribir una reseña",
+    "edit": "Editar tu reseña",
+    "yours": "Tu reseña",
+    "rating": "Tu calificación",
+    "stars_one": "{{count}} estrella",
+    "stars_other": "{{count}} estrellas",
+    "body": "Tu reseña (opcional)",
+    "bodyPlaceholder": "¿Qué pediste? ¿Qué tal estuvo?",
+    "post": "Publicar reseña",
+    "update": "Actualizar reseña",
+    "delete": "Borrar reseña",
+    "pending": "Tu reseña espera una revisión rápida antes de aparecer.",
+    "posted": "¡Gracias! Tu reseña ya se ve.",
+    "deleted": "Tu reseña se borró.",
+    "signIn": "Inicia sesión para escribir una reseña",
+    "nameHint": "Se muestra con tu nombre público, nunca con tu correo ni teléfono."
+  },
+  "photos": {
+    "title": "Fotos",
+    "fromVendor": "Del vendedor",
+    "fromCustomers": "De los clientes",
+    "none": "Todavía no hay fotos.",
+    "add": "Agregar una foto",
+    "addHint": "Comida o cosas que compraste aquí. Por favor, sin caras ni placas de carro.",
+    "privacy": "Quitamos la ubicación y los datos de la cámara de cada foto.",
+    "choose": "Elegir una foto",
+    "caption": "Descripción (opcional)",
+    "upload": "Subir",
+    "uploading": "Subiendo… {{percent}}%",
+    "processing": "Procesando…",
+    "pending": "¡Gracias! Un moderador revisará tu foto antes de que aparezca.",
+    "signIn": "Inicia sesión para agregar fotos",
+    "open": "Abrir foto"
+  },
+  "report": {
+    "action": "Reportar",
+    "vendor": "Reportar a este vendedor",
+    "photo": "Reportar foto",
+    "review": "Reportar reseña",
+    "title": "¿Qué está mal?",
+    "details": "Detalles (opcional)",
+    "send": "Enviar reporte",
+    "sent": "Gracias. Un moderador lo revisará.",
+    "signIn": "Inicia sesión para reportar",
+    "reasons": {
+      "spam": "Spam o publicidad",
+      "offensive": "Ofensivo o de odio",
+      "harassment": "Acoso",
+      "unsafe": "Peligroso o ilegal",
+      "wrong_info": "Información equivocada",
+      "privacy": "Muestra caras, placas o datos privados de alguien",
+      "other": "Otra cosa"
+    }
+  }
+}

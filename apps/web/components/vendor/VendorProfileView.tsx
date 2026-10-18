@@ -2,11 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ReviewPublic, VendorProfile } from "@streeteats/shared";
+import { minutesAgo, type ReportTarget, type ReviewPublic, type VendorProfile } from "@streeteats/shared";
 import { api, ApiRequestError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
+import { useNow } from "@/lib/hooks/useNow";
+import { CommunityActions, PhotoGrid, ReportDialog } from "../community/VendorCommunity";
 import { CategoryIcon, DirectionsButtons, LiveLine, PaymentBadges, PrecisionNote, Rating, VerifiedBadge } from "./bits";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -50,8 +53,9 @@ function LastActive({ iso }: { iso: string | null }) {
   return <>{t("lastActive.days", { count: d })}</>;
 }
 
-function Review({ r }: { r: ReviewPublic }) {
+function Review({ r, onReport }: { r: ReviewPublic; onReport?: () => void }) {
   const { t } = useTranslation("vendor");
+  const { t: tm } = useTranslation("community");
   const f = useFormat();
   return (
     <li className="flex flex-col gap-1 rounded-2xl bg-white p-4">
@@ -62,6 +66,11 @@ function Review({ r }: { r: ReviewPublic }) {
         </span>
         <span className="font-bold">{r.authorName ?? t("anonymous")}</span>
         <span className="text-sm text-ink-soft">{new Intl.DateTimeFormat(f.locale, { dateStyle: "medium" }).format(new Date(r.createdAt))}</span>
+        {onReport && (
+          <button type="button" onClick={onReport} className="ml-auto text-sm font-bold text-ink-soft underline-offset-2 hover:underline">
+            ⚑ {tm("report.action")}
+          </button>
+        )}
       </div>
       {r.body && <p>{r.body}</p>}
       {r.vendorReply && (
@@ -74,12 +83,27 @@ function Review({ r }: { r: ReviewPublic }) {
   );
 }
 
+/** "A customer confirmed they're here 12 minutes ago" */
+function CustomerConfirmed({ iso }: { iso: string }) {
+  const { t } = useTranslation("community");
+  const mins = minutesAgo(iso, useNow());
+  return (
+    <p className="font-semibold text-live">
+      ✓ {mins < 1 ? t("stillHere.customerConfirmedJustNow") : t("stillHere.customerConfirmed", { count: mins })}
+    </p>
+  );
+}
+
 function Profile({ v }: { v: VendorProfile }) {
   const { t, i18n } = useTranslation("vendor");
   const { t: tc } = useTranslation("catalog");
   const { t: ts } = useTranslation("search");
+  const { t: tm } = useTranslation("community");
+  const { status } = useAuth();
   const f = useFormat();
   const lang = i18n.language;
+  const [reporting, setReporting] = useState<{ type: ReportTarget; id: string } | null>(null);
+  const canReport = status === "signedIn";
 
   return (
     <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
@@ -87,8 +111,18 @@ function Profile({ v }: { v: VendorProfile }) {
         ← {t("backToMap")}
       </Link>
 
+      {v.photos.cover && (
+        // eslint-disable-next-line @next/next/no-img-element -- served by our API, already resized
+        <img src={v.photos.cover.url} alt="" className="aspect-[3/1] w-full rounded-3xl bg-sand object-cover" />
+      )}
+
       <header className="flex items-start gap-4">
-        <CategoryIcon category={v.categories[0]} size="lg" />
+        {v.photos.profile ? (
+          // eslint-disable-next-line @next/next/no-img-element -- served by our API, already resized
+          <img src={v.photos.profile.thumbUrl} alt="" className="size-16 shrink-0 rounded-full border-2 border-white object-cover shadow" />
+        ) : (
+          <CategoryIcon category={v.categories[0]} size="lg" />
+        )}
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl leading-tight font-black sm:text-4xl">{v.displayName}</h1>
           <p className="text-ink-soft">
@@ -105,6 +139,7 @@ function Profile({ v }: { v: VendorProfile }) {
       {v.live ? (
         <div className="flex flex-col gap-3 rounded-3xl border-2 border-live bg-live/5 p-5">
           <LiveLine live={v.live} />
+          {v.live.customerConfirmedAt && <CustomerConfirmed iso={v.live.customerConfirmedAt} />}
           <PrecisionNote location={v.live.location} />
           <DirectionsButtons vendorId={v.id} location={v.live.location} />
         </div>
@@ -116,6 +151,8 @@ function Profile({ v }: { v: VendorProfile }) {
           </p>
         </div>
       )}
+
+      <CommunityActions v={v} lang={lang} onReport={setReporting} />
 
       {v.status && (
         <p className="rounded-2xl bg-marigold/25 px-4 py-3 text-lg font-semibold">
@@ -143,6 +180,23 @@ function Profile({ v }: { v: VendorProfile }) {
           </ul>
         )}
       </Section>
+
+      {(v.photos.gallery.length > 0 || v.photos.customer.length > 0) && (
+        <Section title={tm("photos.title")}>
+          {v.photos.gallery.length > 0 && (
+            <>
+              <h3 className="font-extrabold text-ink-soft">{tm("photos.fromVendor")}</h3>
+              <PhotoGrid photos={v.photos.gallery} onReport={setReporting} />
+            </>
+          )}
+          {v.photos.customer.length > 0 && (
+            <>
+              <h3 className="font-extrabold text-ink-soft">{tm("photos.fromCustomers")}</h3>
+              <PhotoGrid photos={v.photos.customer} onReport={setReporting} />
+            </>
+          )}
+        </Section>
+      )}
 
       <Section title={t("payments")}>
         <PaymentBadges methods={v.paymentMethods} size="md" />
@@ -216,11 +270,13 @@ function Profile({ v }: { v: VendorProfile }) {
         ) : (
           <ul className="flex flex-col gap-3">
             {v.reviews.map((r) => (
-              <Review key={r.id} r={r} />
+              <Review key={r.id} r={r} onReport={canReport ? () => setReporting({ type: "review", id: r.id }) : undefined} />
             ))}
           </ul>
         )}
       </Section>
+
+      <ReportDialog target={reporting} onClose={() => setReporting(null)} />
     </article>
   );
 }

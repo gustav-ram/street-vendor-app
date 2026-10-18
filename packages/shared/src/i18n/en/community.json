@@ -1,0 +1,85 @@
+{
+  "favorite": {
+    "add": "Save",
+    "saved": "Saved",
+    "addLabel": "Save to favorites",
+    "removeLabel": "Remove from favorites",
+    "notify": "Tell me when they open",
+    "notifyHint": "Saved now; notifications arrive in a later version. Your location will stay on your phone.",
+    "signIn": "Sign in to save favorites"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorites yet. Tap ♡ Save on a vendor's page to keep them here.",
+    "signIn": "Sign in to see your favorites.",
+    "next": "Next: {{when}}",
+    "notifyOn": "Notify when open"
+  },
+  "stillHere": {
+    "question": "Are they here right now?",
+    "yes": "Yes, they're here",
+    "thanks": "Thanks! You confirmed they're here.",
+    "already": "You already confirmed today. Thanks!",
+    "locationNote": "We use your location once to check you're nearby. It's never stored.",
+    "customerConfirmed": "A customer confirmed they're here {{count}} min ago",
+    "signIn": "Sign in to confirm",
+    "checking": "Checking…",
+    "needLocation": "Allow location for this site to confirm. It’s used once to check you’re nearby and never stored.",
+    "customerConfirmedJustNow": "A customer just confirmed they're here"
+  },
+  "reviews": {
+    "write": "Write a review",
+    "edit": "Edit your review",
+    "yours": "Your review",
+    "rating": "Your rating",
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "body": "Your review (optional)",
+    "bodyPlaceholder": "What did you get? How was it?",
+    "post": "Post review",
+    "update": "Update review",
+    "delete": "Delete review",
+    "pending": "Your review is waiting for a quick check before it appears.",
+    "posted": "Thanks! Your review is up.",
+    "deleted": "Your review was deleted.",
+    "signIn": "Sign in to write a review",
+    "nameHint": "Shown with your display name, never your email or phone."
+  },
+  "photos": {
+    "title": "Photos",
+    "fromVendor": "From the vendor",
+    "fromCustomers": "From customers",
+    "none": "No photos yet.",
+    "add": "Add a photo",
+    "addHint": "Food or items you bought here. Please no faces or license plates.",
+    "privacy": "We remove location and camera details from every photo.",
+    "choose": "Choose a photo",
+    "caption": "Caption (optional)",
+    "upload": "Upload",
+    "uploading": "Uploading… {{percent}}%",
+    "processing": "Processing…",
+    "pending": "Thanks! A moderator will check your photo before it appears.",
+    "signIn": "Sign in to add photos",
+    "open": "Open photo"
+  },
+  "report": {
+    "action": "Report",
+    "vendor": "Report this vendor",
+    "photo": "Report photo",
+    "review": "Report review",
+    "title": "What is wrong?",
+    "details": "Details (optional)",
+    "send": "Send report",
+    "sent": "Thanks. A moderator will take a look.",
+    "signIn": "Sign in to report",
+    "reasons": {
+      "spam": "Spam or advertising",
+      "offensive": "Offensive or hateful",
+      "harassment": "Harassment",
+      "unsafe": "Unsafe or illegal",
+      "wrong_info": "Wrong information",
+      "privacy": "Shows someone's faces, plates or private info",
+      "other": "Something else"
+    }
+  }
+}

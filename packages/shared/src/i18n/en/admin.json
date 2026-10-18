@@ -1,0 +1,25 @@
+{
+  "title": "Moderation",
+  "adminsOnly": "This page is for moderators.",
+  "photos": "Photos waiting",
+  "reviews": "Reviews waiting",
+  "reports": "Open reports",
+  "approve": "Approve",
+  "reject": "Reject",
+  "dismiss": "Dismiss",
+  "uphold": "Uphold and take down",
+  "resolve": "Mark resolved",
+  "note": "Note (optional)",
+  "empty": "Nothing waiting.",
+  "for": "For {{vendor}}",
+  "reason": "Reason: {{reason}}",
+  "targetGone": "Already deleted",
+  "openVendor": "Open vendor page",
+  "targets": {
+    "vendor": "Vendor",
+    "photo": "Photo",
+    "review": "Review",
+    "status_post": "Update",
+    "upcoming_post": "Upcoming spot"
+  }
+}

@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { GoLivePanel } from "./GoLivePanel";
 import { MenuEditor } from "./MenuEditor";
+import { PhotosManager } from "./PhotosManager";
 import { ProfileForm } from "./ProfileForm";
+import { ReviewsManager } from "./ReviewsManager";
 import { StatusComposer } from "./StatusComposer";
 import { VendorGate } from "./VendorGate";
 
@@ -25,6 +27,12 @@ export function Dashboard({ lang }: { lang: string }) {
               <Link href={`/${lang}/v/${vendor.id}`} className={linkClass}>
                 👀 {t("viewPublicProfile")}
               </Link>
+              <Link href={`/${lang}/vendor/photos`} className={linkClass}>
+                📷 {t("actions.photos")}
+              </Link>
+              <Link href={`/${lang}/vendor/reviews`} className={linkClass}>
+                ★ {t("actions.reviews")}
+              </Link>
               <Link href={`/${lang}/vendor/profile`} className={linkClass}>
                 ⚙️ {t("actions.profile")}
               </Link>
@@ -40,6 +48,42 @@ export function Dashboard({ lang }: { lang: string }) {
         </main>
       )}
     </VendorGate>
+  );
+}
+
+/** A vendor sub-page with a way back to the dashboard. */
+function SubPage({ lang, title, wide = false, children }: { lang: string; title: string; wide?: boolean; children: React.ReactNode }) {
+  const { t } = useTranslation("dashboard");
+  return (
+    <VendorGate lang={lang} mode="dashboard">
+      {() => (
+        <main className={`mx-auto flex w-full flex-col gap-6 px-4 py-6 ${wide ? "max-w-5xl" : "max-w-2xl"}`}>
+          <Link href={`/${lang}/vendor`} className="w-fit font-bold text-chile">
+            ← {t("web.back")}
+          </Link>
+          <h1 className="text-4xl font-black">{title}</h1>
+          {children}
+        </main>
+      )}
+    </VendorGate>
+  );
+}
+
+export function PhotosPage({ lang }: { lang: string }) {
+  const { t } = useTranslation("dashboard");
+  return (
+    <SubPage lang={lang} title={t("photos.title")} wide>
+      <PhotosManager />
+    </SubPage>
+  );
+}
+
+export function ReviewsPage({ lang }: { lang: string }) {
+  const { t } = useTranslation("dashboard");
+  return (
+    <SubPage lang={lang} title={t("reviews.title")}>
+      <ReviewsManager />
+    </SubPage>
   );
 }
 

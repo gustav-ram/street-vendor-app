@@ -6,6 +6,7 @@ export const buttonClass = {
   primary: "inline-flex min-h-12 items-center justify-center rounded-full bg-chile px-6 text-lg font-bold text-white hover:bg-chile-dark disabled:opacity-50",
   dark: "inline-flex min-h-12 items-center justify-center rounded-full bg-ink px-6 text-lg font-bold text-white hover:bg-ink/85 disabled:opacity-50",
   outline: "inline-flex min-h-12 items-center justify-center rounded-full border-2 border-ink bg-white px-6 text-lg font-bold hover:bg-sand disabled:opacity-50",
+  danger: "inline-flex min-h-12 items-center justify-center rounded-full border-2 border-chile bg-chile px-6 text-lg font-bold text-white hover:bg-chile-dark disabled:opacity-50",
 };
 
 export const inputClass = "min-h-12 rounded-xl border-2 border-ink bg-white px-3 text-lg placeholder:text-ink-soft";

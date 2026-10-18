@@ -1,0 +1,25 @@
+{
+  "title": "Moderación",
+  "adminsOnly": "Esta página es para moderadores.",
+  "photos": "Fotos pendientes",
+  "reviews": "Reseñas pendientes",
+  "reports": "Reportes abiertos",
+  "approve": "Aprobar",
+  "reject": "Rechazar",
+  "dismiss": "Descartar",
+  "uphold": "Confirmar y quitar",
+  "resolve": "Marcar como resuelto",
+  "note": "Nota (opcional)",
+  "empty": "No hay nada pendiente.",
+  "for": "Para {{vendor}}",
+  "reason": "Motivo: {{reason}}",
+  "targetGone": "Ya se borró",
+  "openVendor": "Abrir la página del vendedor",
+  "targets": {
+    "vendor": "Vendedor",
+    "photo": "Foto",
+    "review": "Reseña",
+    "status_post": "Aviso",
+    "upcoming_post": "Próximo lugar"
+  }
+}

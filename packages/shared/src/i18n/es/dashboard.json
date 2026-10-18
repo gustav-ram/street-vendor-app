@@ -60,7 +60,9 @@
   "actions": {
     "postUpdate": "Publicar un aviso",
     "menu": "Menú y agotados",
-    "profile": "Mi perfil"
+    "profile": "Mi perfil",
+    "photos": "Fotos",
+    "reviews": "Reseñas"
   },
   "status": {
     "title": "Publicar un aviso",
@@ -113,5 +115,37 @@
     "vendorsOnly": "Esta página es para vendedores. Iniciaste sesión con una cuenta de cliente.",
     "back": "Mi puesto",
     "liveTitle": "Abrir o cerrar"
+  },
+  "photos": {
+    "title": "Fotos",
+    "profile": "Foto de perfil",
+    "cover": "Foto de portada",
+    "gallery": "Comida y productos",
+    "customer": "De los clientes",
+    "add": "+ Agregar foto",
+    "replace": "Cambiar",
+    "delete": "Borrar",
+    "confirmDelete": "¿Borrar esta foto?",
+    "hide": "Ocultar de mi página",
+    "unhide": "Mostrar en mi página",
+    "hidden": "Oculta",
+    "warning": "Por favor, sin caras ni placas de carro. Quitamos la ubicación y los datos de la cámara de cada foto.",
+    "empty": "Todavía no hay fotos.",
+    "customerEmpty": "Todavía no hay fotos de clientes. Aparecen aquí cuando un moderador las aprueba.",
+    "added": "Foto agregada."
+  },
+  "reviews": {
+    "title": "Reseñas",
+    "empty": "Todavía no hay reseñas.",
+    "reply": "Responder públicamente",
+    "editReply": "Editar respuesta",
+    "replyPlaceholder": "Agradécele o explica lo que pasó.",
+    "sendReply": "Publicar respuesta",
+    "deleteReply": "Borrar respuesta",
+    "block": "Bloquear a esta persona",
+    "blocked": "Bloqueado",
+    "blockHint": "Las personas bloqueadas no pueden dejarte reseñas, subir fotos a tu página ni confirmarte. Las reseñas que ya escribieron se quedan, a menos que un moderador las quite.",
+    "blocks": "Personas bloqueadas",
+    "unblock": "Desbloquear"
   }
 }
