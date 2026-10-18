@@ -9,7 +9,7 @@ A "Yelp for street vendors": customers find nearby open hot dog carts, taco stan
 | iOS app (Expo, runs in Expo Go) | `apps/mobile` | Metro on port 8090 |
 | Shared types, schemas, EN/ES strings | `packages/shared` | |
 
-> **Status:** M1 (foundation) and M2 (customer map, search, filters, vendor profiles on web and iOS) are done. Vendor tools, photos, reviews, offline mode and launch tools arrive in M3–M6 ([PLAN.md §8](PLAN.md)).
+> **Status:** M1–M5 are done: customer map and search, vendor tools and Go Live, photos, reviews and moderation, "where I'll be" posts, the vendor app's offline mode and the Community Verified badge. Invite codes, analytics, privacy screens and account export/delete arrive in M6 ([PLAN.md §8](PLAN.md)).
 
 ## Prerequisites
 
@@ -132,7 +132,9 @@ API integration tests run against the `streeteats_test` database and refuse to r
 - **Logs:** no URLs, query strings, coordinates, search text, IPs or emails are written.
 
 - **Photos:** EXIF and GPS are stripped (the test uploads a rotated phone photo with GPS coordinates and checks every served file); photos are kept upright; non-images are refused on the first chunk; huge-canvas "decompression bombs" are refused; uploads resume after a dropped connection and are swept after 24 h; customer photos stay private until approved; hidden and vacation-mode photos stop loading; rejected photos are deleted with their files.
-- **"Still here?":** stores no location or identity; requires being near the public point (~400 m approximate, ~200 m exact), a live vendor and an account at least a day old; refuses vendors and blocked people; one per day per person, only one per week counts; a per-account daily cap; hashes change with each 30-day pepper and old peppers and rows are deleted.
+- **"Still here?":** stores no location or identity; requires being near the public point (~400 m approximate, ~200 m exact), a live vendor and an account at least a day old; refuses vendors and blocked people; one per day per person, only one per week counts; a per-account daily cap; one person keeps one hash across a 30-day pepper change (so they never count as two), and old peppers and rows are deleted.
+- **"Where I'll be" posts and schedules:** approximate mode stores only the snapped point (never the coordinates the phone sent), the same spot always gives the same point, exact mode rounds to ~1 m; posts disappear the moment their window ends and are deleted an hour later; offline edits apply last-write-wins and retries are harmless; a delete can't be undone by a late edit; limits on length, how far ahead and how many.
+- **Community Verified badge:** granted only when all four criteria are met; one loyal customer never counts as several; the confirmations step is remembered after old taps expire; open reports never block it, but an upheld report against the vendor (not a customer's review on their page) removes it; an admin revoke holds until restored; the badge never changes search order.
 - **Reviews, favorites, reports:** one review per customer, links/phones/slurs held for moderation, vendor replies, blocking without revealing who; favorite counts; reports never show the reporter, and upholding one takes the content down; moderation is for admins only.
 
 The shared package tests cover:
@@ -140,6 +142,8 @@ The shared package tests cover:
 - **Go Live on a device** (the logic the iOS app and website share), with fake timers: location is never read while the screen is hidden or for a session another device started; coming back after the grace period never restarts on its own; lost signal resumes with the original closing time; a heartbeat reply that arrives after closing doesn't put the vendor back on; turning location off mid-session closes the stand.
 - **Resumable uploads:** every byte arrives exactly once after a dropped request or a lost reply, with backoff, and errors that retrying can't fix aren't retried.
 - **Prices** as vendors type them ("7,50", "$7").
+- **Offline outbox** (the vendor app's queue): changes are sent in order; no signal means backoff from 2 s up to 5 min with jitter; a change the server got but whose reply was lost is sent again harmlessly; between two devices the newest change wins and the older one becomes a sync issue ("Use my version" re-sends it); queued edits to the same thing are folded together; the queue survives a restart, including how far a photo upload got. Queued changes are shown on top of the last server copy.
+- **"Where I'll be" time picker:** windows past midnight, reading a post back for editing, and refusing windows that are too long or already over.
 - **Translations:** every English string has a Spanish twin with the same placeholders.
 
 ```bash
@@ -160,7 +164,8 @@ xcrun simctl location "StreetEats iPhone 17" set 34.0453,-118.2509
 - **A photo with GPS data:** `xcrun simctl addmedia "StreetEats iPhone 17" path/to/photo.jpg` adds it to the Simulator's Photos. Upload it from a vendor page; the stored copy has no location or camera data.
 
 If you deny location access, the app and the website offer a built-in list of LA neighborhoods instead. That list is searched on the device, so nothing you type is sent anywhere.
-- **Bad signal:** install *Network Link Conditioner* (Xcode → Open Developer Tool → More Developer Tools → "Additional Tools for Xcode") and pick the "Very Bad Network" or "100% Loss" profile. It affects the Simulator too. The vendor app gets a built-in "Simulate no signal" switch in M5.
+- **No signal (vendor app):** in the iOS vendor dashboard, open **My profile** and scroll to **Simulate no signal (testing)** (development builds only). Every request then fails as if the phone had no connection. Turn it off to "reconnect".
+- **Bad signal:** install *Network Link Conditioner* (Xcode → Open Developer Tool → More Developer Tools → "Additional Tools for Xcode") and pick the "Very Bad Network" or "100% Loss" profile. It affects the Simulator too. Turning off the Mac's Wi-Fi also works.
 
 ## Trying it as a customer
 
@@ -168,16 +173,17 @@ No account is needed to browse.
 
 1. Start the API, web and `npm run demo:live`.
 2. Search **LA style hot dog**. The synonym system finds the bacon-wrapped, Danger Dog and Sonoran dog carts, and the line under the search bar shows what the query was understood as. Spanish works too: try **perros calientes**, **flores** or **elotes**. So do typos: try **tamals**.
-3. Open **Filters** to filter by distance, category, price, payment type or language spoken (try Zapotec or Korean). Turn off **Open now** to also see vendors who plan to be somewhere later (dashed pins).
-4. Tap a pin, then **View**, for the full profile with menu, schedule, upcoming spots and reviews. **Get directions** opens Apple or Google Maps at the vendor's public point. For approximate-area vendors that point is up to ~150 m from the cart.
+3. Open **Filters** to filter by distance, category, price, payment type or language spoken (try Zapotec or Korean).
+4. Switch the tab above the map from **Open now** to **Upcoming** to see where vendors plan to be in the next 2 days ("where I'll be" posts and published weekly schedules), as dashed pins and a list grouped by day. Signed in, your favorites' next spots come first, wherever they are.
+5. Tap a pin, then **View**, for the full profile with menu, schedule, upcoming spots and reviews. **Get directions** opens Apple or Google Maps at the vendor's public point. For approximate-area vendors that point is up to ~150 m from the cart. A **Community Verified** vendor has **How is this earned?** under the badge.
 
 **Signed in** as `customer@demo.test`, a vendor's page also has:
 
-5. **♡ Save** to keep them under **Favorites** (a tab on iPhone, a header link on the web), with live status and where they'll be next. **Tell me when they open** is saved; real notifications come later, and the phone, not the server, would decide what's "near me".
-6. **Write a review**: one per vendor, editable. Reviews with links, phone numbers or slurs wait for a moderator first.
-7. **Add a photo** of what you bought. It's shrunk on the phone, uploaded in resumable chunks, re-encoded on the server with all location and camera data removed, and shown only after a moderator approves it.
-8. **Are they here right now? → Yes, they're here** (only while the vendor is live and you're within ~400 m). Your location is checked once and never stored. One per vendor per day.
-9. **Report** a vendor, a photo or a review.
+6. **♡ Save** to keep them under **Favorites** (a tab on iPhone, a header link on the web), with live status and where they'll be next. **Tell me when they open** is saved; real notifications come later, and the phone, not the server, would decide what's "near me".
+7. **Write a review**: one per vendor, editable. Reviews with links, phone numbers or slurs wait for a moderator first.
+8. **Add a photo** of what you bought. It's shrunk on the phone, uploaded in resumable chunks, re-encoded on the server with all location and camera data removed, and shown only after a moderator approves it.
+9. **Are they here right now? → Yes, they're here** (only while the vendor is live and you're within ~400 m). Your location is checked once and never stored. One per vendor per day.
+10. **Report** a vendor, a photo or a review.
 
 ## Moderating
 
@@ -185,7 +191,8 @@ Sign in as `admin@demo.test` and open **Moderation** in the header (http://local
 
 - **Photos waiting**: customer photos, visible only to moderators until approved. **Reject** deletes the photo and its files.
 - **Reviews waiting**: reviews the text screen held back.
-- **Open reports**: what was reported and why (never who reported it). **Uphold and take down** removes the photo, review or post; **Dismiss** and **Mark resolved** close the report.
+- **Open reports**: what was reported and why (never who reported it). **Uphold and take down** removes the photo, review or post; **Dismiss** and **Mark resolved** close the report. A report upheld against the vendor or their own posts also takes away their badge.
+- **Community Verified badges**: lists verified and revoked vendors, or find one by name. **Revoke badge** asks for a reason (the vendor sees it) and keeps the badge off until you **Restore** it; restoring re-checks the criteria.
 
 The seed leaves one customer photo waiting so the queue isn't empty.
 
@@ -203,8 +210,20 @@ Use `newvendor@demo.test` to try the quick start, or `vendor@demo.test` for a st
 6. **My profile** has payment badges (types only, never account names or numbers), languages, the default map precision, an optional public contact (off by default) and vacation mode.
 7. **Photos** sets the profile and cover photos and the food gallery, and lists customer photos: **Hide from my page** (not delete), **Report**, or **Block this person**.
 8. **Reviews** lets you reply publicly, report a review or block its author. Blocked people can't review you, add photos or confirm you; reviews they already wrote stay up unless a moderator removes them, so blocking can't be used to hide criticism.
+9. **📍 Where I'll be** lets you post future spots ("Saturday 5–9 pm near Broadway & 7th"): pick a day and times, move the map so the pin sits on the spot, choose approximate (the default) or exact, and add a place name or note. Customers see it on your page, under **Upcoming** on the map and in their favorites. Each spot disappears on its own when its time is over. Below it, the **weekly schedule** ("Fridays near the park") is shown only if you turn on **Show my schedule to customers**.
+10. **🛡️ Community Verified** on the dashboard shows your progress toward the badge, step by step, with counts only. `vendor@demo.test` already has it; a new vendor starts at zero.
 
-**On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)).
+**On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)). **Where I'll be**, **Weekly schedule** and **Community Verified** are buttons on the dashboard.
+
+**Offline mode (iPhone):** the dashboard keeps working with no signal.
+
+1. In **My profile**, turn on **Simulate no signal (testing)** (or turn off the Mac's Wi-Fi). The dashboard says it's showing what's saved on the phone.
+2. Mark an item sold out, post an update, add a "where I'll be" spot or a photo. Each shows at once with **⏳ Pending sync**, and the bar at the top counts what's waiting.
+3. To see a conflict, change the same menu item from the website (it's newer).
+4. Turn the switch off. Everything waiting is sent in order within a second or two; the website shows the changes.
+5. The older menu change shows as **1 change couldn't be saved**. Tap it: the **Sync issues** screen says a newer change was kept, with **Use my version** (send it again, now newest) or **OK**.
+
+Signing out drops the saved copy and anything not yet sent (you're warned first), so nothing stays on a shared phone.
 
 **One device at a time:** if you're live on the phone and open the dashboard on a laptop, the laptop shows **Live from another device** and never shares its own location unless you press **Use this device's location**. The phone then stops sending its location.
 

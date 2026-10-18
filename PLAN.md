@@ -2,7 +2,7 @@
 
 Approved 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
 
-**Progress:** M1, M2 and M3 done (2026-10-17); M4 done (2026-10-18). Next: M5.
+**Progress:** M1, M2 and M3 done (2026-10-17); M4 and M5 done (2026-10-18). Next: M6.
 
 ## 1. Key decisions
 
@@ -200,7 +200,7 @@ An admin revoke keeps the badge off until an admin restores it. The badge never 
 | Uploads | `POST /uploads` · `HEAD /uploads/:id` · `PATCH /uploads/:id` (`Upload-Offset`) |
 | Vendor | `POST /vendor/quick-start` · `GET`/`PATCH /vendor/profile` · `PUT`/`DELETE /vendor/menu/:itemId` · `PUT /vendor/menu/:itemId/sold-out` · `GET`/`POST`/`DELETE /vendor/live` · `POST /vendor/live/heartbeat` · `PUT`/`DELETE /vendor/status/:postId` · `PUT`/`DELETE /vendor/upcoming/:postId` · `PUT /vendor/schedule` · `POST /vendor/photos` · `DELETE /vendor/photos/:id` · `PATCH /vendor/customer-photos/:id` (hide) · `PUT /vendor/reviews/:id/reply` · `GET /vendor/analytics?range=7d\|30d` · `GET /vendor/verification` |
 | Account | `GET /me/export` · `DELETE /me` |
-| Admin | `GET /admin/moderation` · `POST /admin/moderation/:kind/:id` · `GET /admin/reports` · `POST /admin/reports/:id` · `POST /admin/vendors/:id/verification` · `GET`/`POST /admin/invites` · public `GET /invites/:code` |
+| Admin | `GET /admin/moderation` · `POST /admin/moderation/:kind/:id` · `GET /admin/reports` · `POST /admin/reports/:id` · `GET /admin/vendors` · `POST /admin/vendors/:id/verification` · `GET`/`POST /admin/invites` · public `GET /invites/:code` |
 
 Vendor writes use `PUT` with a client-generated id and `clientUpdatedAt`, so outbox retries can't create duplicates.
 
@@ -253,3 +253,8 @@ Seeded logins (customer, live vendor, brand-new vendor, admin) use `.test` email
 - **Demo accounts** are created a month old so the demo customer can try "Still here?" (new accounts wait a day).
 - **Hermes** (React Native) has no `Intl.RelativeTimeFormat`, so relative times come from the translation files.
 - **iOS "Search this area"** only appears after the user touches the map. react-native-maps reports `isGesture` on Google Maps only, so the app tracks touches itself.
+- **Upcoming tab (M5):** on both apps, an "Open now / Upcoming" tab above the map replaces the "Open now" filter. Upcoming lists planned spots for the next 48 h grouped by day, with favorites' next spots first (from anywhere, since the customer chose to follow them).
+- **"Where I'll be" posts (M5):** `PUT`/`DELETE /vendor/upcoming/:id` with the same fuzzing as Go Live (approximate by default; only the snapped point is stored) and the same last-write-wins tombstones as menu items. A window must end in the future (`window_ended` otherwise, which is what an outbox item that waited too long gets), last at most 16 h and start within 14 days; 10 active posts per vendor. The vendor's own dashboard shows the published point, so they see what customers see.
+- **Weekly schedule (M5):** `PUT /vendor/schedule` replaces the whole list, with one "show to customers" switch. It's online-only on the phone (it rarely changes, and a replace-all can't be merged). Editing sends back the published point, and fuzzing a published point returns the same point, so saving never moves a spot.
+- **Offline mode (M5):** every vendor change on the phone goes through the shared outbox (`packages/shared/src/outbox`), even with signal, so there's one code path. The queue and the last copy of the business are kept in `expo-sqlite/kv-store` rather than a persisted TanStack cache; queued changes are laid over the server copy (`applyPending`) so nothing flickers. Sync runs on NetInfo reconnect, on returning to the app, after any request reaches the server, and on the backoff timer. Profile edits and the schedule stay online-only. Queued photos are copied to the app's documents folder, carry a phone-made photo id (so a retry adds them once) and remember their upload id (so a restart resumes). Signing out clears all of it.
+- **Community Verified (M5):** checked after a counted "Still here?" tap, a new day live, an approved review or an upheld report, and when the vendor opens their progress. Once all four steps are met the badge is kept; an upheld report against the vendor takes it away, and an admin revoke holds until restored. Because upholding deletes the content, reports now record the vendor they count against (`reports.vendor_id`, never set for a customer's review or photo). The confirmations step is remembered once reached, so 30-day expiry doesn't undo it. A confirmer keeps the hash of their earlier rows across a pepper change, so one person can't count as two different accounts. Criteria live in `.env` and are published in `GET /meta` for "How do I earn this?".
