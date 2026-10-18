@@ -411,6 +411,10 @@ export const reports = pgTable(
     reporterUserId: uuid('reporter_user_id').references(() => users.id, { onDelete: 'set null' }),
     targetType: reportTarget('target_type').notNull(),
     targetId: uuid('target_id').notNull(),
+    // The vendor when the report is about the vendor or their own posts and
+    // photos (not a customer's review or photo). Upholding a report deletes
+    // the content, so this is how the badge still sees it afterwards.
+    vendorId: uuid('vendor_id').references((): AnyPgColumn => vendorProfiles.id, { onDelete: 'cascade' }),
     reason: reportReason('reason').notNull(),
     details: text('details'),
     status: reportStatus('status').notNull().default('open'),
@@ -418,7 +422,11 @@ export const reports = pgTable(
     createdAt: createdAt(),
     resolvedAt: ts('resolved_at'),
   },
-  (t) => [index('reports_status_idx').on(t.status), index('reports_target_idx').on(t.targetType, t.targetId)],
+  (t) => [
+    index('reports_status_idx').on(t.status),
+    index('reports_target_idx').on(t.targetType, t.targetId),
+    index('reports_vendor_idx').on(t.vendorId, t.status),
+  ],
 );
 
 export const userBlocks = pgTable(

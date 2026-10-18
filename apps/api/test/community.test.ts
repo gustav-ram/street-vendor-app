@@ -141,7 +141,7 @@ describe('"Still here?" confirmations', () => {
     }
   });
 
-  it('hashes change with each 30-day pepper, and old peppers and rows are deleted', async () => {
+  it('a person keeps one hash across a pepper change while their rows exist; old peppers and rows are deleted', async () => {
     const v = await liveVendor();
     const c = await customer();
     await confirm(v.vendorId, c.headers);
@@ -152,10 +152,12 @@ describe('"Still here?" confirmations', () => {
     // Rotate: pretend this pepper is from the previous epoch and a new one takes over.
     await ctx.db.update(hashPeppers).set({ epoch: current - 1 });
     await ctx.db.update(stillHereConfirmations).set({ epoch: current - 1, createdAt: sql`now() - interval '26 hours'` });
-    // The previous epoch is still checked, so the rotation can't be used to double-count this week.
+    // The previous epoch is still checked, so the rotation can't be used to double-count this week,
+    // and the new row reuses the earlier hash, so the badge still sees one person, not two.
     await confirm(v.vendorId, c.headers);
     const rows = await ctx.db.select().from(stillHereConfirmations).orderBy(stillHereConfirmations.createdAt);
-    expect(rows[1]!.confirmerHash).not.toBe(rows[0]!.confirmerHash);
+    expect(rows[1]!.confirmerHash).toBe(rows[0]!.confirmerHash);
+    expect(rows[1]!.epoch).toBe(current - 1);
     expect(rows[1]!.counted).toBe(false);
 
     // Two epochs on, the old pepper goes, and rows older than 30 days go too.
@@ -165,6 +167,13 @@ describe('"Still here?" confirmations', () => {
     const epochs = (await ctx.db.select({ epoch: hashPeppers.epoch }).from(hashPeppers)).map((p) => p.epoch).sort();
     expect(epochs).toEqual([current - 1, current]);
     expect(await ctx.db.$count(stillHereConfirmations)).toBe(1);
+
+    // Once the earlier rows are gone, the current pepper takes over: a new hash nobody can link to the old one.
+    await ctx.db.delete(stillHereConfirmations);
+    await confirm(v.vendorId, c.headers);
+    const [fresh] = await ctx.db.select().from(stillHereConfirmations);
+    expect(fresh!.epoch).toBe(current);
+    expect(fresh!.confirmerHash).not.toBe(rows[0]!.confirmerHash);
   });
 
   it('the viewer endpoint says whether you already confirmed today', async () => {

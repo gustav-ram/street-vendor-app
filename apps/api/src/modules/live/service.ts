@@ -6,6 +6,7 @@ import { ApiError } from '../../lib/errors';
 import { publicLocation } from '../../lib/geo/fuzz';
 import { pointSql } from '../../lib/geo/sql';
 import { localDay, localTimeOnDay } from '../../lib/time';
+import { refreshVerification } from '../verification/service';
 
 /**
  * Live sessions: heartbeat + TTL (PLAN.md §6.2).
@@ -104,7 +105,8 @@ export async function startLiveSession(
     .values({ vendorId: vendor.id, ...values })
     .onConflictDoUpdate({ target: vendorLiveSessions.vendorId, set: values });
 
-  await Promise.all([touchLastLive(ctx, vendor.id), countLiveDay(ctx, vendor.id, localDay(now, vendor.timezone))]);
+  const [, newDay] = await Promise.all([touchLastLive(ctx, vendor.id), countLiveDay(ctx, vendor.id, localDay(now, vendor.timezone))]);
+  if (newDay) await refreshVerification(ctx, vendor.id);
   return getLiveStatus(ctx, vendor.id);
 }
 
@@ -163,7 +165,7 @@ async function touchLastLive(ctx: AppContext, vendorId: string) {
 
 /** Counts distinct days live (for the badge). Stores a count and the last day only. */
 async function countLiveDay(ctx: AppContext, vendorId: string, today: string) {
-  await ctx.db.execute(sql`
+  const result = await ctx.db.execute(sql`
     INSERT INTO verification_progress (vendor_id, live_days, last_live_day)
     VALUES (${vendorId}, 1, ${today})
     ON CONFLICT (vendor_id) DO UPDATE
@@ -172,6 +174,7 @@ async function countLiveDay(ctx: AppContext, vendorId: string, today: string) {
           updated_at = now()
       WHERE verification_progress.last_live_day IS NULL
          OR verification_progress.last_live_day < EXCLUDED.last_live_day`);
+  return (result.count ?? 0) > 0;
 }
 
 /**

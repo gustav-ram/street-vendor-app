@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CATEGORIES, DEFAULT_RADIUS_M, LANGUAGES, PAYMENT_METHODS } from '../constants';
+import { badgeCriteriaSchema } from './verification';
 import { latLngSchema, liveInfoSchema, tagSchema, upcomingSpotSchema, vendorSummarySchema } from './vendor';
 
 export const searchFiltersSchema = z.object({
@@ -50,5 +51,7 @@ export const metaResponseSchema = z.object({
   languages: z.array(z.enum(LANGUAGES)),
   tags: z.array(tagSchema.extend({ category: z.string().nullable() })),
   live: z.object({ heartbeatIntervalSec: z.number().int(), graceSec: z.number().int() }),
+  /** What earns the "Community Verified" badge, for "How do I earn this?". */
+  badge: badgeCriteriaSchema,
 });
 export type MetaResponse = z.infer<typeof metaResponseSchema>;

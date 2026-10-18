@@ -31,6 +31,7 @@ export const discoveryRoutes: FastifyPluginAsyncZod = async (app) => {
       languages: [...LANGUAGES],
       tags: tagRows,
       live: { heartbeatIntervalSec: ctx.config.live.heartbeatIntervalSec, graceSec: ctx.config.live.graceSec },
+      badge: ctx.config.badge,
     };
   });
 

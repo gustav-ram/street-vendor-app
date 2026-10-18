@@ -14,6 +14,7 @@ import {
   statusPostInputSchema,
   upcomingPostInputSchema,
   vendorProfileUpdateSchema,
+  verificationProgressSchema,
   writeResultSchema,
 } from '@streeteats/shared';
 import { requireUser } from '../../app';
@@ -25,6 +26,7 @@ import {
   pendingOpenNotifications,
   startLiveSession,
 } from '../live/service';
+import { refreshVerification } from '../verification/service';
 import * as dash from './service';
 
 const idParams = z.object({ id: z.uuid() });
@@ -131,6 +133,13 @@ export const dashboardRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { body: scheduleInputSchema, response: { 200: myVendorSchema } } },
     async (request) => dash.putSchedule(ctx, await requireVendor(request), request.body),
   );
+
+  // ---------------------------------------------------------------- "Community Verified" progress
+
+  app.get('/vendor/verification', { schema: { response: { 200: verificationProgressSchema } } }, async (request) => {
+    const vendor = await requireVendor(request);
+    return refreshVerification(ctx, vendor.id);
+  });
 
   // ---------------------------------------------------------------- live (Go Live / heartbeat / close)
 

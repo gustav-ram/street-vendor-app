@@ -4,6 +4,7 @@ import type { AppContext } from '../../app';
 import { reviews } from '../../db/schema';
 import { ApiError } from '../../lib/errors';
 import { needsReview } from '../../lib/moderation';
+import { refreshVerification } from '../verification/service';
 import { assertNotBlocked, publicVendor } from './guards';
 
 type ReviewRow = typeof reviews.$inferSelect;
@@ -25,6 +26,7 @@ export async function upsertReview(ctx: AppContext, user: { id: string; role: Ro
     .values({ vendorId, userId: user.id, ...values })
     .onConflictDoUpdate({ target: [reviews.vendorId, reviews.userId], set: values })
     .returning();
+  if (moderation === 'approved') await refreshVerification(ctx, vendorId);
   return toMyReview(row!);
 }
 

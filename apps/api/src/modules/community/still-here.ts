@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from 'node:crypto';
-import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { LatLng, Role, StillHereResult } from '@streeteats/shared';
 import type { AppContext } from '../../app';
 import { hashPeppers, stillHereConfirmations, users, vendorLiveSessions } from '../../db/schema';
@@ -7,6 +7,7 @@ import { ApiError } from '../../lib/errors';
 import { distanceMeters } from '../../lib/geo/fuzz';
 import { localDay } from '../../lib/time';
 import { bumpCounter } from '../analytics/counters';
+import { refreshVerification } from '../verification/service';
 import { assertNotBlocked, publicVendor } from './guards';
 
 /**
@@ -27,7 +28,7 @@ import { assertNotBlocked, publicVendor } from './guards';
  * - the vendor must be live right now, and the customer within ~400 m of the
  *   public point (approximate mode) or ~200 m (exact mode);
  * - one confirmation per person per vendor per 24 h, and at most one per 7
- *   days counts toward the badge;
+ *   days counts toward the badge (§ verification/service.ts);
  * - each account confirms at most N vendors a day (counted in memory only),
  *   on top of a per-IP request limit set on the route.
  */
@@ -142,16 +143,27 @@ export async function confirmStillHere(
   if (recent.some((r) => now.getTime() - r.createdAt.getTime() < DAY_MS)) return { status: 'already_confirmed' };
   if (daily.get(user.id) >= rules.dailyLimit) throw new ApiError('rate_limited');
 
-  const current = hashes.find((h) => h.epoch === epochOf(now))!;
+  // While this person still has rows under the previous pepper, keep using
+  // that hash, so a pepper rotation can't make one person look like two to
+  // the badge's "different people" count.
+  const [earlier] = await ctx.db
+    .select({ epoch: stillHereConfirmations.epoch, hash: stillHereConfirmations.confirmerHash })
+    .from(stillHereConfirmations)
+    .where(and(eq(stillHereConfirmations.vendorId, vendorId), inArray(stillHereConfirmations.confirmerHash, hashes.map((h) => h.hash))))
+    .orderBy(asc(stillHereConfirmations.epoch))
+    .limit(1);
+  const use = earlier ?? hashes.find((h) => h.epoch === epochOf(now))!;
+  const counted = !recent.some((r) => r.counted);
   await ctx.db.insert(stillHereConfirmations).values({
     vendorId,
-    confirmerHash: current.hash,
-    epoch: current.epoch,
+    confirmerHash: use.hash,
+    epoch: use.epoch,
     localDay: localDay(now, vendor.timezone),
-    counted: !recent.some((r) => r.counted),
+    counted,
   });
   daily.add(user.id);
   await ctx.db.update(vendorLiveSessions).set({ lastConfirmedAt: now }).where(eq(vendorLiveSessions.vendorId, vendorId));
   await bumpCounter(ctx.db, [vendorId], 'confirmations');
+  if (counted) await refreshVerification(ctx, vendorId);
   return { status: 'confirmed' };
 }

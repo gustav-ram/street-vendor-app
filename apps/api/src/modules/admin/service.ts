@@ -4,6 +4,7 @@ import type { AppContext } from '../../app';
 import { photos, reports, reviews, upcomingSpotPosts, vendorStatusPosts } from '../../db/schema';
 import { ApiError } from '../../lib/errors';
 import { deletePhotos } from '../photos/service';
+import { refreshVerification } from '../verification/service';
 
 const iso = (d: unknown) => new Date(d as string).toISOString();
 
@@ -49,8 +50,13 @@ export async function decide(ctx: AppContext, kind: 'photo' | 'review', id: stri
     await ctx.db.update(photos).set({ moderation: 'approved' }).where(eq(photos.id, id));
     return;
   }
-  const updated = await ctx.db.update(reviews).set({ moderation: decision }).where(eq(reviews.id, id)).returning({ id: reviews.id });
+  const updated = await ctx.db
+    .update(reviews)
+    .set({ moderation: decision })
+    .where(eq(reviews.id, id))
+    .returning({ vendorId: reviews.vendorId });
   if (updated.length === 0) throw new ApiError('not_found');
+  if (decision === 'approved') await refreshVerification(ctx, updated[0]!.vendorId);
 }
 
 async function targetPreview(ctx: AppContext, type: ReportTarget, id: string): Promise<AdminReport['target']> {
@@ -125,8 +131,10 @@ export async function decideReport(ctx: AppContext, id: string, status: 'dismiss
       await ctx.db.delete(upcomingSpotPosts).where(eq(upcomingSpotPosts.id, target));
       break;
     case 'vendor':
-      // Recorded only: an upheld vendor report blocks the badge for 90 days (M5).
+      // Nothing to take down; it counts against the badge (below).
       break;
   }
+  // A report upheld against the vendor's own conduct or posts takes the badge away.
+  if (report.vendorId) await refreshVerification(ctx, report.vendorId);
 }
 
