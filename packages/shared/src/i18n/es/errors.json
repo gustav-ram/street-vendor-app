@@ -15,6 +15,12 @@
   "not_live": "No estás en el mapa en este momento.",
   "live_elsewhere": "Tu puesto está abierto desde otro teléfono o navegador.",
   "vacation_mode": "Apaga el modo vacaciones para aparecer en el mapa.",
+  "unsupported_media": "Ese archivo no es una foto que podamos usar. Prueba con JPEG, PNG o WebP.",
+  "image_too_large": "Esa foto es demasiado grande. Prueba con una más pequeña.",
+  "upload_incomplete": "La foto no terminó de subirse. Inténtalo de nuevo.",
+  "offset_mismatch": "La subida se desincronizó. Reintentando…",
+  "too_far": "Tienes que estar cerca del vendedor para confirmar que está aquí.",
+  "account_too_new": "Las cuentas nuevas pueden confirmar vendedores después de su primer día.",
   "internal": "Algo salió mal de nuestro lado. Intenta de nuevo.",
   "network": "Sin conexión. Revisa tu señal e intenta de nuevo."
 }

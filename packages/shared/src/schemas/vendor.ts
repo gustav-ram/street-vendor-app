@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CATEGORIES, LANGUAGES, PAYMENT_METHODS, PRECISIONS } from '../constants';
+import { vendorPhotosPublicSchema } from './photos';
 
 export const latLngSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -36,6 +37,8 @@ export const liveInfoSchema = z.object({
   since: z.string(),
   /** Last heartbeat or customer "still here", rounded down to the minute. */
   lastConfirmedAt: z.string(),
+  /** Last time a customer nearby tapped "Yes, they're here", rounded down to the minute. */
+  customerConfirmedAt: z.string().nullable(),
   endsAt: z.string(),
 });
 export type LiveInfo = z.infer<typeof liveInfoSchema>;
@@ -90,6 +93,7 @@ export const vendorProfileSchema = vendorSummarySchema.extend({
   schedule: z.array(scheduleEntryPublicSchema),
   upcoming: z.array(upcomingSpotSchema),
   reviews: z.array(reviewPublicSchema),
+  photos: vendorPhotosPublicSchema,
 });
 export type VendorProfile = z.infer<typeof vendorProfileSchema>;
 

@@ -46,15 +46,51 @@ export function uniqueEmail(prefix = 'user') {
 type Ctx = Awaited<ReturnType<typeof createTestContext>>;
 
 /** Registers an account through the API and returns its bearer header. */
-export async function signUp(ctx: Ctx, role: 'customer' | 'vendor') {
+export async function signUp(ctx: Ctx, role: 'customer' | 'vendor', displayName?: string) {
+  const email = uniqueEmail(role);
   const res = await ctx.app.inject({
     method: 'POST',
     url: '/v1/auth/register',
     headers: MOBILE,
-    payload: { email: uniqueEmail(role), role, credential: { kind: 'password', secret: 'correct-horse-battery' } },
+    payload: { email, role, displayName, credential: { kind: 'password', secret: 'correct-horse-battery' } },
   });
   const body = res.json();
-  return { authorization: `Bearer ${body.accessToken}`, userId: body.user.id as string };
+  return { authorization: `Bearer ${body.accessToken}`, userId: body.user.id as string, email };
+}
+
+/** Admins can't sign up: make a customer an admin in the database, then sign in again. */
+export async function signUpAdmin(ctx: Ctx) {
+  const { email, userId } = await signUp(ctx, 'customer');
+  await ctx.db.execute(sql`UPDATE users SET role = 'admin' WHERE id = ${userId}`);
+  const res = await ctx.app.inject({
+    method: 'POST',
+    url: '/v1/auth/login',
+    headers: MOBILE,
+    payload: { email, secret: 'correct-horse-battery' },
+  });
+  return { headers: { authorization: `Bearer ${res.json().accessToken}` }, userId };
+}
+
+/** Pretends the account was made `hours` ago (for the "Still here?" account-age rule). */
+export async function ageAccount(ctx: Ctx, userId: string, hours: number) {
+  await ctx.db.execute(sql`UPDATE users SET created_at = now() - make_interval(hours => ${hours}) WHERE id = ${userId}`);
+}
+
+/** Sends bytes through the resumable upload API in small chunks and returns the upload id. */
+export async function uploadBytes(ctx: Ctx, headers: Record<string, string>, data: Buffer, contentType = 'image/jpeg', chunk = 64 * 1024) {
+  const created = await ctx.app.inject({ method: 'POST', url: '/v1/uploads', headers, payload: { contentType, totalBytes: data.length } });
+  if (created.statusCode !== 201) throw new Error(`create upload failed: ${created.body}`);
+  const id = created.json().id as string;
+  for (let offset = 0; offset < data.length; offset += chunk) {
+    const res = await ctx.app.inject({
+      method: 'PATCH',
+      url: `/v1/uploads/${id}`,
+      headers: { ...headers, 'upload-offset': String(offset), 'content-type': 'application/offset+octet-stream' },
+      payload: data.subarray(offset, offset + chunk),
+    });
+    if (res.statusCode !== 200) throw Object.assign(new Error(`chunk failed: ${res.body}`), { res });
+  }
+  return id;
 }
 
 /** A vendor account that finished the quick start. */

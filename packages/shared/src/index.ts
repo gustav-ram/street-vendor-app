@@ -8,4 +8,7 @@ export * from './schemas/errors';
 export * from './schemas/vendor';
 export * from './schemas/search';
 export * from './schemas/dashboard';
+export * from './schemas/photos';
+export * from './schemas/community';
 export * from './live/controller';
+export * from './upload/client';

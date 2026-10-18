@@ -5,6 +5,7 @@ import { createDb } from '../src/db/client';
 import { users, vendorProfiles } from '../src/db/schema';
 import { createTokenService } from '../src/lib/tokens';
 import { ApiError } from '../src/lib/errors';
+import { createStorage } from '../src/lib/storage';
 import { endLiveSession, getLiveStatus, heartbeatLiveSession, startLiveSession } from '../src/modules/live/service';
 import { DEMO_ACCOUNTS } from './seed-data/accounts';
 import { VENDORS } from './seed-data/vendors';
@@ -22,7 +23,7 @@ const OFFLINE = new Set(['perros-la-guera', 'fruteria-paraiso', 'paletas-el-oso'
 
 const config = loadConfig();
 const { db, close } = createDb(config.databaseUrl);
-const ctx: AppContext = { config, db, tokens: createTokenService(config) };
+const ctx: AppContext = { config, db, tokens: createTokenService(config), storage: createStorage(config.uploadDir) };
 
 const emailFor = (key: string) => (key === DEMO_ACCOUNTS.vendor.vendorKey ? DEMO_ACCOUNTS.vendor.email : `vendor-${key}@demo.test`);
 const chosen = VENDORS.filter((v) => process.argv.includes('--all') || !OFFLINE.has(v.key));

@@ -87,7 +87,17 @@ export const LIMITS = {
   placeLabelMax: 80,
   reportDetailsMax: 500,
   photoMaxBytes: 10 * 1024 * 1024,
+  photoCaptionMax: 140,
+  /** Upload chunk size the clients use; the server accepts up to twice this per request. */
+  uploadChunkBytes: 512 * 1024,
+  reviewReplyMax: 500,
 } as const;
+
+export const UPLOAD_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export type UploadContentType = (typeof UPLOAD_CONTENT_TYPES)[number];
+
+export const VENDOR_PHOTO_KINDS = ['profile', 'cover', 'gallery'] as const;
+export type VendorPhotoKind = (typeof VENDOR_PHOTO_KINDS)[number];
 
 /**
  * Every category has a base tag, so searching "flores" or "hot dog" finds

@@ -15,15 +15,22 @@ import type { Config } from './config';
 import type { Db } from './db/client';
 import { ApiError } from './lib/errors';
 import { loggerOptions, safeError } from './lib/logging';
+import { createStorage, type Storage } from './lib/storage';
 import { type AuthUser, createTokenService, type TokenService } from './lib/tokens';
+import { adminRoutes } from './modules/admin/routes';
 import { authRoutes } from './modules/auth/routes';
+import { communityRoutes } from './modules/community/routes';
+import { vendorCommunityRoutes } from './modules/community/vendor-routes';
 import { dashboardRoutes } from './modules/dashboard/routes';
 import { discoveryRoutes } from './modules/discovery/routes';
+import { mediaRoutes, photoRoutes } from './modules/photos/routes';
+import { uploadRoutes } from './modules/uploads/routes';
 
 export interface AppContext {
   config: Config;
   db: Db;
   tokens: TokenService;
+  storage: Storage;
 }
 
 declare module 'fastify' {
@@ -54,7 +61,7 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  app.decorate('ctx', { config, db, tokens: createTokenService(config) });
+  app.decorate('ctx', { config, db, tokens: createTokenService(config), storage: createStorage(config.uploadDir) });
   app.decorateRequest('user', null);
 
   // One line per request, with the route pattern only (see lib/logging.ts).
@@ -98,6 +105,7 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
     const status = (err as FastifyError).statusCode ?? 500;
     if (status === 429) return reply.code(429).send({ error: { code: 'rate_limited' } });
     if (status === 413) return reply.code(413).send({ error: { code: 'payload_too_large' } });
+    if (status === 415) return reply.code(415).send({ error: { code: 'unsupported_media' } });
     if (status === 404) return reply.code(404).send({ error: { code: 'not_found' } });
     if (status >= 400 && status < 500) return reply.code(400).send({ error: { code: 'validation_failed' } });
     request.log.error({ err: safeError(err), route: request.routeOptions.url }, 'unhandled error');
@@ -132,6 +140,12 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
   await app.register(authRoutes, { prefix: '/v1' });
   await app.register(discoveryRoutes, { prefix: '/v1' });
   await app.register(dashboardRoutes, { prefix: '/v1' });
+  await app.register(uploadRoutes, { prefix: '/v1' });
+  await app.register(photoRoutes, { prefix: '/v1' });
+  await app.register(communityRoutes, { prefix: '/v1' });
+  await app.register(vendorCommunityRoutes, { prefix: '/v1' });
+  await app.register(adminRoutes, { prefix: '/v1' });
+  await app.register(mediaRoutes);
 
   return app;
 }

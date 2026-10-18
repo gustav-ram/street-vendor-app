@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { VendorProfile } from '@streeteats/shared';
 import type { AppContext } from '../../app';
 import { ApiError } from '../../lib/errors';
+import { getPublicPhotos } from '../photos/service';
 import { nextOccurrence } from '../search/service';
 import { iso, minuteIso, point, summaryColumns, type SummaryRow, toSummary } from './summary';
 
@@ -18,10 +19,11 @@ export async function getPublicProfile(ctx: AppContext, vendorId: string): Promi
     WHERE v.id = ${vendorId} AND NOT v.hidden`);
   if (!row) throw new ApiError('not_found');
 
-  const [liveRows, tagRows, menuRows, scheduleRows, upcomingRows, reviewRows] = await Promise.all([
+  const [liveRows, tagRows, menuRows, scheduleRows, upcomingRows, reviewRows, photos] = await Promise.all([
     db.execute(sql`
       SELECT ST_Y(public_point::geometry) AS lat, ST_X(public_point::geometry) AS lng, precision,
-        started_at, greatest(last_heartbeat_at, coalesce(last_confirmed_at, last_heartbeat_at)) AS confirmed_at, ends_at
+        started_at, greatest(last_heartbeat_at, coalesce(last_confirmed_at, last_heartbeat_at)) AS confirmed_at,
+        last_confirmed_at AS customer_confirmed_at, ends_at
       FROM vendor_live_sessions
       WHERE vendor_id = ${vendorId} AND expires_at > now() AND ends_at > now()`),
     db.execute(sql`
@@ -45,6 +47,7 @@ export async function getPublicProfile(ctx: AppContext, vendorId: string): Promi
       FROM reviews r JOIN users u ON u.id = r.user_id
       WHERE r.vendor_id = ${vendorId} AND r.moderation = 'approved'
       ORDER BY r.created_at DESC LIMIT 10`),
+    getPublicPhotos(ctx, vendorId),
   ]);
 
   const live = liveRows[0];
@@ -80,6 +83,7 @@ export async function getPublicProfile(ctx: AppContext, vendorId: string): Promi
           location: point(live.lat, live.lng, live.precision),
           since: minuteIso(live.started_at),
           lastConfirmedAt: minuteIso(live.confirmed_at),
+          customerConfirmedAt: live.customer_confirmed_at ? minuteIso(live.customer_confirmed_at) : null,
           endsAt: iso(live.ends_at),
         }
       : null,
@@ -119,5 +123,6 @@ export async function getPublicProfile(ctx: AppContext, vendorId: string): Promi
       vendorReply: (r.vendor_reply as string | null) ?? null,
       vendorReplyAt: r.vendor_reply_at ? iso(r.vendor_reply_at) : null,
     })),
+    photos,
   };
 }

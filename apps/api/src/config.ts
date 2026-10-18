@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
@@ -34,6 +35,11 @@ const envSchema = z.object({
   DEFAULT_TIMEZONE: z.string().default('America/Los_Angeles'),
   APPROX_CELL_METERS: z.coerce.number().positive().default(180),
   UPLOAD_DIR: z.string().default('./data/uploads'),
+  PHOTO_MAX_PIXELS: z.coerce.number().int().positive().default(40_000_000),
+  STILL_HERE_MIN_ACCOUNT_AGE_HOURS: z.coerce.number().min(0).default(24),
+  STILL_HERE_RADIUS_APPROX_M: z.coerce.number().positive().default(400),
+  STILL_HERE_RADIUS_EXACT_M: z.coerce.number().positive().default(200),
+  STILL_HERE_DAILY_LIMIT: z.coerce.number().int().positive().default(10),
   INVITE_REQUIRED: bool,
   REVIEW_PREMODERATION: bool,
 });
@@ -68,7 +74,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     },
     defaultTimezone: e.DEFAULT_TIMEZONE,
     approxCellMeters: e.APPROX_CELL_METERS,
-    uploadDir: e.UPLOAD_DIR.startsWith('/') ? e.UPLOAD_DIR : new URL(e.UPLOAD_DIR, `file://${repoRoot}`).pathname,
+    // Tests write to their own folder so they never touch real uploads.
+    uploadDir: join(e.UPLOAD_DIR.startsWith('/') ? e.UPLOAD_DIR : join(repoRoot, e.UPLOAD_DIR), e.NODE_ENV === 'test' ? 'test' : ''),
+    photoMaxPixels: e.PHOTO_MAX_PIXELS,
+    stillHere: {
+      minAccountAgeHours: e.STILL_HERE_MIN_ACCOUNT_AGE_HOURS,
+      radiusApproxM: e.STILL_HERE_RADIUS_APPROX_M,
+      radiusExactM: e.STILL_HERE_RADIUS_EXACT_M,
+      dailyLimit: e.STILL_HERE_DAILY_LIMIT,
+    },
     inviteRequired: e.INVITE_REQUIRED,
     reviewPremoderation: e.REVIEW_PREMODERATION,
   };

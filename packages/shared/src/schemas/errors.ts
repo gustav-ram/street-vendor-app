@@ -19,6 +19,14 @@ export const ERROR_CODES = [
   'not_live',
   'live_elsewhere',
   'vacation_mode',
+  // Photos and uploads
+  'unsupported_media',
+  'image_too_large',
+  'upload_incomplete',
+  'offset_mismatch',
+  // "Still here?"
+  'too_far',
+  'account_too_new',
   'internal',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

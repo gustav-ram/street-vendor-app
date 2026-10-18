@@ -31,12 +31,7 @@ const idParams = z.object({ id: z.uuid() });
 export const dashboardRoutes: FastifyPluginAsyncZod = async (app) => {
   const { ctx } = app;
 
-  async function requireVendor(request: FastifyRequest) {
-    const user = requireUser(request, ['vendor']);
-    const vendor = await dash.findVendorByUser(ctx, user.id);
-    if (!vendor) throw new ApiError('onboarding_required');
-    return vendor;
-  }
+  const requireVendor = (request: FastifyRequest) => dash.requireVendor(ctx, request);
 
   app.post(
     '/vendor/quick-start',

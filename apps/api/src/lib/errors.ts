@@ -16,6 +16,12 @@ const STATUS: Record<ErrorCode, number> = {
   not_live: 409,
   live_elsewhere: 409,
   vacation_mode: 409,
+  unsupported_media: 415,
+  image_too_large: 413,
+  upload_incomplete: 409,
+  offset_mismatch: 409,
+  too_far: 422,
+  account_too_new: 403,
   rate_limited: 429,
   internal: 500,
 };

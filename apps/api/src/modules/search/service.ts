@@ -64,6 +64,7 @@ async function searchLive(ctx: AppContext, origin: SQL, p: SearchParams, where: 
       s.precision,
       s.started_at,
       greatest(s.last_heartbeat_at, coalesce(s.last_confirmed_at, s.last_heartbeat_at)) AS confirmed_at,
+      s.last_confirmed_at AS customer_confirmed_at,
       s.ends_at,
       ST_Distance(s.public_point, ${origin}) AS distance_m
     FROM vendor_live_sessions s
@@ -79,6 +80,7 @@ async function searchLive(ctx: AppContext, origin: SQL, p: SearchParams, where: 
       location: point(r.lat, r.lng, r.precision),
       since: minuteIso(r.started_at),
       lastConfirmedAt: minuteIso(r.confirmed_at),
+      customerConfirmedAt: r.customer_confirmed_at ? minuteIso(r.customer_confirmed_at) : null,
       endsAt: iso(r.ends_at),
     },
     distanceM: roundDistance(r.distance_m),

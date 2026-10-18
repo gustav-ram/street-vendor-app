@@ -8,7 +8,8 @@ import {
   type QuickStartInput,
   type VendorProfileUpdate,
 } from '@streeteats/shared';
-import type { AppContext } from '../../app';
+import type { FastifyRequest } from 'fastify';
+import { type AppContext, requireUser } from '../../app';
 import type { Db } from '../../db/client';
 import {
   deletedEntities,
@@ -30,6 +31,14 @@ export interface VendorRef {
   timezone: string;
   hidden: boolean;
   defaultPrecision: Precision;
+}
+
+/** The signed-in vendor's business, or 401/403/409 (no business yet). */
+export async function requireVendor(ctx: AppContext, request: FastifyRequest) {
+  const user = requireUser(request, ['vendor']);
+  const vendor = await findVendorByUser(ctx, user.id);
+  if (!vendor) throw new ApiError('onboarding_required');
+  return { ...vendor, userId: user.id };
 }
 
 export async function findVendorByUser(ctx: AppContext, userId: string): Promise<VendorRef | null> {

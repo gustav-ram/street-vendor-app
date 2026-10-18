@@ -15,6 +15,12 @@
   "not_live": "You're not on the map right now.",
   "live_elsewhere": "Your stand is live from another phone or browser.",
   "vacation_mode": "Turn off vacation mode to go live.",
+  "unsupported_media": "That file isn't a photo we can use. Try a JPEG, PNG or WebP.",
+  "image_too_large": "That photo is too big. Try a smaller one.",
+  "upload_incomplete": "The photo didn't finish uploading. Please try again.",
+  "offset_mismatch": "The upload got out of step. Retrying…",
+  "too_far": "You need to be near the vendor to confirm they're here.",
+  "account_too_new": "New accounts can confirm vendors after their first day.",
   "internal": "Something went wrong on our side. Please try again.",
   "network": "No connection. Check your signal and try again."
 }

@@ -6,7 +6,7 @@ import { startSweeper } from './jobs/sweeper';
 const config = loadConfig();
 const { db, close } = createDb(config.databaseUrl);
 const app = await buildApp({ config, db });
-const stopSweeper = startSweeper(db, app.log);
+const stopSweeper = startSweeper(db, app.log, app.ctx.storage);
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');
