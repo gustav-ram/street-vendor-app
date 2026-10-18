@@ -4,7 +4,8 @@ import { loadConfig } from '../src/config';
 import { createDb } from '../src/db/client';
 import { users, vendorProfiles } from '../src/db/schema';
 import { createTokenService } from '../src/lib/tokens';
-import { endLiveSession, upsertLiveSession } from '../src/modules/live/service';
+import { ApiError } from '../src/lib/errors';
+import { endLiveSession, heartbeatLiveSession, startLiveSession } from '../src/modules/live/service';
 import { DEMO_ACCOUNTS } from './seed-data/accounts';
 import { VENDORS } from './seed-data/vendors';
 
@@ -27,7 +28,13 @@ const emailFor = (key: string) => (key === DEMO_ACCOUNTS.vendor.vendorKey ? DEMO
 const chosen = VENDORS.filter((v) => process.argv.includes('--all') || !OFFLINE.has(v.key));
 
 const rows = await db
-  .select({ id: vendorProfiles.id, email: users.email, timezone: vendorProfiles.timezone, precision: vendorProfiles.defaultPrecision })
+  .select({
+    id: vendorProfiles.id,
+    email: users.email,
+    timezone: vendorProfiles.timezone,
+    hidden: vendorProfiles.hidden,
+    defaultPrecision: vendorProfiles.defaultPrecision,
+  })
   .from(vendorProfiles)
   .innerJoin(users, eq(users.id, vendorProfiles.userId))
   .where(inArray(users.email, chosen.map((v) => emailFor(v.key))));
@@ -45,7 +52,13 @@ if (live.length === 0) {
 
 async function heartbeat() {
   for (const v of live) {
-    await upsertLiveSession(ctx, v.id, v.spot, { precision: v.precision, timezone: v.timezone });
+    try {
+      await heartbeatLiveSession(ctx, v.id, v.spot);
+    } catch (err) {
+      // Not live yet (first run) or expired: start a session, like the app does.
+      if (err instanceof ApiError && err.code === 'not_live') await startLiveSession(ctx, v, v.spot).catch(() => {});
+      else throw err;
+    }
   }
 }
 

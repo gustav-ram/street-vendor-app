@@ -10,7 +10,7 @@ import {
   vendorTags,
 } from '../src/db/schema';
 import { pointSql } from '../src/lib/geo/sql';
-import { endLiveSession, upsertLiveSession } from '../src/modules/live/service';
+import { endLiveSession, startLiveSession } from '../src/modules/live/service';
 import { clearSynonymCache } from '../src/modules/search/query';
 import { createTestContext, resetDb, uniqueEmail } from './helpers';
 
@@ -58,8 +58,10 @@ async function makeVendor(opts: {
   return v!.id;
 }
 
+// hidden: false even for vacation-mode vendors, to prove search filters them out
+// on its own (the API refuses to start a session for them).
 const goLive = (vendorId: string, at = near(0.005)) =>
-  upsertLiveSession(ctx.app.ctx, vendorId, at, { precision: 'approximate', timezone: 'America/Los_Angeles' });
+  startLiveSession(ctx.app.ctx, { id: vendorId, timezone: 'America/Los_Angeles', hidden: false, defaultPrecision: 'approximate' }, at);
 
 async function search(body: Record<string, unknown>) {
   const res = await ctx.app.inject({ method: 'POST', url: '/v1/search', payload: { location: DOWNTOWN, ...body } });

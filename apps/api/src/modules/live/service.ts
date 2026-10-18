@@ -1,16 +1,28 @@
-import { eq, sql } from 'drizzle-orm';
-import type { LatLng, Precision } from '@streeteats/shared';
+import { and, eq, sql } from 'drizzle-orm';
+import type { LatLng, LiveStatus, Precision } from '@streeteats/shared';
 import type { AppContext } from '../../app';
-import { vendorLiveSessions, vendorProfiles } from '../../db/schema';
+import { favorites, vendorLiveSessions, vendorProfiles } from '../../db/schema';
+import { ApiError } from '../../lib/errors';
 import { publicLocation } from '../../lib/geo/fuzz';
 import { pointSql } from '../../lib/geo/sql';
-import { localTimeOnDay } from '../../lib/time';
+import { localDay, localTimeOnDay } from '../../lib/time';
 
 /**
- * When a live session must end no matter what: the vendor's auto-off timer,
- * the end of their "street day" (e.g. 3:00 AM local) or the hard maximum.
+ * Live sessions: heartbeat + TTL (PLAN.md §6.2).
+ *
+ * - A session row exists only while the vendor is live; there is no history.
+ * - Each heartbeat pushes expires_at to now + grace. If heartbeats stop (no
+ *   signal, app closed, phone died), the session silently expires and the
+ *   sweeper deletes the row and the location with it.
+ * - ends_at is a hard stop: the auto-off timer, the end of the vendor's
+ *   "street day", or the maximum session length, whichever comes first.
+ * - Only the public point is written. In approximate mode the exact
+ *   coordinates from the phone are fuzzed in memory and never stored.
  */
-export function computeEndsAt(ctx: AppContext, now: Date, timezone: string, autoOffHours?: number): Date {
+
+const LIVE_NOW = sql`${vendorLiveSessions.expiresAt} > now() AND ${vendorLiveSessions.endsAt} > now()`;
+
+export function computeEndsAt(ctx: AppContext, now: Date, timezone: string, autoOffHours?: number | null): Date {
   const { streetDayEndsAt, maxHours } = ctx.config.live;
   let dayEnd = localTimeOnDay(now, 0, streetDayEndsAt, timezone);
   if (dayEnd <= now) dayEnd = localTimeOnDay(now, 1, streetDayEndsAt, timezone);
@@ -19,58 +31,110 @@ export function computeEndsAt(ctx: AppContext, now: Date, timezone: string, auto
   return new Date(Math.min(...candidates));
 }
 
-/**
- * Starts a live session or refreshes it (heartbeat). Only the public point
- * is written; in approximate mode the exact coordinates never reach the database.
- */
-export async function upsertLiveSession(
-  ctx: AppContext,
-  vendorId: string,
-  rawPoint: LatLng,
-  opts: { precision: Precision; timezone: string; autoOffHours?: number },
-) {
-  const now = new Date();
-  const fuzz = { secret: ctx.config.fuzzSecret, cellMeters: ctx.config.approxCellMeters };
-  const [existing] = await ctx.db
-    .select({ cellKey: vendorLiveSessions.cellKey, precision: vendorLiveSessions.precision, endsAt: vendorLiveSessions.endsAt })
-    .from(vendorLiveSessions)
-    .where(eq(vendorLiveSessions.vendorId, vendorId));
-  const samePrecision = existing?.precision === opts.precision;
-  const loc = publicLocation(rawPoint, opts.precision, vendorId, fuzz, samePrecision ? existing?.cellKey : null);
-  const expiresAt = new Date(now.getTime() + ctx.config.live.graceSec * 1000);
-  const endsAt = existing && opts.autoOffHours === undefined ? existing.endsAt : computeEndsAt(ctx, now, opts.timezone, opts.autoOffHours);
+function fuzzOptions(ctx: AppContext) {
+  return { secret: ctx.config.fuzzSecret, cellMeters: ctx.config.approxCellMeters };
+}
 
+export async function getLiveStatus(ctx: AppContext, vendorId: string): Promise<LiveStatus> {
+  const [s] = await ctx.db
+    .select({
+      lat: sql<number>`ST_Y(${vendorLiveSessions.publicPoint}::geometry)`,
+      lng: sql<number>`ST_X(${vendorLiveSessions.publicPoint}::geometry)`,
+      precision: vendorLiveSessions.precision,
+      startedAt: vendorLiveSessions.startedAt,
+      lastHeartbeatAt: vendorLiveSessions.lastHeartbeatAt,
+      expiresAt: vendorLiveSessions.expiresAt,
+      endsAt: vendorLiveSessions.endsAt,
+    })
+    .from(vendorLiveSessions)
+    .where(and(eq(vendorLiveSessions.vendorId, vendorId), LIVE_NOW));
+  const timing = { heartbeatIntervalSec: ctx.config.live.heartbeatIntervalSec, graceSec: ctx.config.live.graceSec };
+  if (!s) {
+    return { state: 'offline', location: null, startedAt: null, lastHeartbeatAt: null, expiresAt: null, endsAt: null, ...timing };
+  }
+  return {
+    state: 'live',
+    location: { lat: Number(s.lat), lng: Number(s.lng), precision: s.precision },
+    startedAt: s.startedAt.toISOString(),
+    lastHeartbeatAt: s.lastHeartbeatAt.toISOString(),
+    expiresAt: s.expiresAt.toISOString(),
+    endsAt: s.endsAt.toISOString(),
+    ...timing,
+  };
+}
+
+/** Starts (or restarts) a live session at the vendor's current location. */
+export async function startLiveSession(
+  ctx: AppContext,
+  vendor: { id: string; timezone: string; hidden: boolean; defaultPrecision: Precision },
+  rawPoint: LatLng,
+  opts: { precision?: Precision; autoOffHours?: number | null; endsAt?: string } = {},
+) {
+  if (vendor.hidden) throw new ApiError('vacation_mode');
+  const now = new Date();
+  const precision = opts.precision ?? vendor.defaultPrecision;
+  let endsAt = computeEndsAt(ctx, now, vendor.timezone, opts.autoOffHours);
+  // Resuming after lost signal keeps the original end time, never extends it.
+  if (opts.endsAt) {
+    const requested = new Date(opts.endsAt);
+    if (requested > now && requested < endsAt) endsAt = requested;
+  }
+
+  const [existing] = await ctx.db
+    .select({ cellKey: vendorLiveSessions.cellKey, precision: vendorLiveSessions.precision })
+    .from(vendorLiveSessions)
+    .where(eq(vendorLiveSessions.vendorId, vendor.id));
+  const previousCell = existing?.precision === precision ? existing.cellKey : null;
+  const loc = publicLocation(rawPoint, precision, vendor.id, fuzzOptions(ctx), previousCell);
+  const expiresAt = new Date(now.getTime() + ctx.config.live.graceSec * 1000);
+
+  const values = {
+    publicPoint: pointSql(loc),
+    precision,
+    cellKey: loc.cellKey,
+    startedAt: now,
+    lastHeartbeatAt: now,
+    expiresAt,
+    endsAt,
+  };
   await ctx.db
     .insert(vendorLiveSessions)
-    .values({
-      vendorId,
+    .values({ vendorId: vendor.id, ...values })
+    .onConflictDoUpdate({ target: vendorLiveSessions.vendorId, set: values });
+
+  await Promise.all([touchLastLive(ctx, vendor.id), countLiveDay(ctx, vendor.id, localDay(now, vendor.timezone))]);
+  return getLiveStatus(ctx, vendor.id);
+}
+
+/**
+ * A heartbeat keeps an existing session alive and moves the public point if
+ * the vendor moved. It never revives an expired session: the app has to
+ * start a new one (so a vendor who walked away from the app stays offline).
+ */
+export async function heartbeatLiveSession(ctx: AppContext, vendorId: string, rawPoint: LatLng) {
+  const [s] = await ctx.db
+    .select({ precision: vendorLiveSessions.precision, cellKey: vendorLiveSessions.cellKey })
+    .from(vendorLiveSessions)
+    .where(and(eq(vendorLiveSessions.vendorId, vendorId), LIVE_NOW));
+  if (!s) throw new ApiError('not_live');
+
+  const loc = publicLocation(rawPoint, s.precision, vendorId, fuzzOptions(ctx), s.cellKey);
+  const now = new Date();
+  const updated = await ctx.db
+    .update(vendorLiveSessions)
+    .set({
       publicPoint: pointSql(loc),
-      precision: opts.precision,
       cellKey: loc.cellKey,
-      startedAt: now,
       lastHeartbeatAt: now,
-      expiresAt,
-      endsAt,
+      expiresAt: new Date(now.getTime() + ctx.config.live.graceSec * 1000),
     })
-    .onConflictDoUpdate({
-      target: vendorLiveSessions.vendorId,
-      set: {
-        publicPoint: pointSql(loc),
-        precision: opts.precision,
-        cellKey: loc.cellKey,
-        lastHeartbeatAt: now,
-        expiresAt,
-        endsAt,
-      },
-    });
+    .where(and(eq(vendorLiveSessions.vendorId, vendorId), LIVE_NOW))
+    .returning({ vendorId: vendorLiveSessions.vendorId });
+  // Expired between the read and the write.
+  if (updated.length === 0) throw new ApiError('not_live');
 
-  // "Last active" is kept to the hour, and is only a time, never a place.
-  await ctx.db
-    .update(vendorProfiles)
-    .set({ lastLiveAt: sql`date_trunc('hour', now())` })
-    .where(eq(vendorProfiles.id, vendorId));
-
-  return { location: loc, expiresAt, endsAt };
+  await touchLastLive(ctx, vendorId);
+  return getLiveStatus(ctx, vendorId);
 }
 
 /** Going offline deletes the row, and with it the only copy of the location. */
@@ -81,3 +145,34 @@ export async function endLiveSession(ctx: AppContext, vendorId: string) {
     .returning({ vendorId: vendorLiveSessions.vendorId });
   return deleted.length > 0;
 }
+
+/** "Last active" is kept to the hour, and is only a time, never a place. */
+async function touchLastLive(ctx: AppContext, vendorId: string) {
+  await ctx.db
+    .update(vendorProfiles)
+    .set({ lastLiveAt: sql`date_trunc('hour', now())` })
+    .where(eq(vendorProfiles.id, vendorId));
+}
+
+/** Counts distinct days live (for the badge). Stores a count and the last day only. */
+async function countLiveDay(ctx: AppContext, vendorId: string, today: string) {
+  await ctx.db.execute(sql`
+    INSERT INTO verification_progress (vendor_id, live_days, last_live_day)
+    VALUES (${vendorId}, 1, ${today})
+    ON CONFLICT (vendor_id) DO UPDATE
+      SET live_days = verification_progress.live_days + 1,
+          last_live_day = EXCLUDED.last_live_day,
+          updated_at = now()
+      WHERE verification_progress.last_live_day IS NULL
+         OR verification_progress.last_live_day < EXCLUDED.last_live_day`);
+}
+
+/**
+ * "Notify me when they open" (stub). A real sender would push the vendor's
+ * public area and let each phone decide locally whether it's "near me".
+ * Only a count is ever returned or logged.
+ */
+export async function pendingOpenNotifications(ctx: AppContext, vendorId: string) {
+  return ctx.db.$count(favorites, and(eq(favorites.vendorId, vendorId), eq(favorites.notifyOnOpen, true)));
+}
+

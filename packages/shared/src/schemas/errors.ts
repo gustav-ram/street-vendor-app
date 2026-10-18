@@ -14,6 +14,10 @@ export const ERROR_CODES = [
   'identifier_taken',
   'invalid_invite',
   'payload_too_large',
+  'onboarding_required',
+  'already_onboarded',
+  'not_live',
+  'vacation_mode',
   'internal',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

@@ -10,6 +10,10 @@
   "identifier_taken": "Ya existe una cuenta con ese correo o teléfono.",
   "invalid_invite": "Ese código de invitación no es válido o ya venció.",
   "payload_too_large": "Ese archivo es demasiado grande.",
+  "onboarding_required": "Primero configura tu negocio.",
+  "already_onboarded": "Tu negocio ya está configurado.",
+  "not_live": "No estás en el mapa en este momento.",
+  "vacation_mode": "Apaga el modo vacaciones para aparecer en el mapa.",
   "internal": "Algo salió mal de nuestro lado. Intenta de nuevo.",
   "network": "Sin conexión. Revisa tu señal e intenta de nuevo."
 }

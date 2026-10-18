@@ -11,6 +11,10 @@ const STATUS: Record<ErrorCode, number> = {
   identifier_taken: 409,
   invalid_invite: 400,
   payload_too_large: 413,
+  onboarding_required: 409,
+  already_onboarded: 409,
+  not_live: 409,
+  vacation_mode: 409,
   rate_limited: 429,
   internal: 500,
 };

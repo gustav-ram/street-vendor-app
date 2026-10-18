@@ -30,13 +30,29 @@ export function loggerOptions(config: Config, stream?: DestinationStream): Fasti
   };
 }
 
+/**
+ * Error details that are safe to log. Database errors are reduced to their
+ * SQLSTATE code: the driver's message (and the first line of the stack)
+ * repeats the query parameters, which can include coordinates or emails.
+ */
 export function safeError(err: unknown) {
-  if (!(err instanceof Error)) return { type: typeof err, message: 'non-error thrown', stack: '' };
-  const code = (err as { code?: unknown }).code;
+  if (!err || typeof err !== 'object') return { type: typeof err, message: 'non-error thrown', stack: '' };
+  const e = err as { name?: string; message?: string; stack?: string; code?: unknown; cause?: unknown };
+  const frames = (e.stack ?? '').split('\n').filter((line) => line.trimStart().startsWith('at ')).join('\n');
+  const sqlState = findSqlState(e);
+  if (sqlState || e.name === 'DrizzleQueryError' || e.message?.startsWith('Failed query')) {
+    return { type: 'DatabaseError', message: 'database query failed', code: sqlState, stack: frames };
+  }
   return {
-    type: err.name,
-    message: err.message,
-    code: typeof code === 'string' ? code : undefined,
-    stack: err.stack ?? '',
+    type: e.name ?? 'Error',
+    message: e.message ?? '',
+    code: typeof e.code === 'string' ? e.code : undefined,
+    stack: frames,
   };
+}
+
+function findSqlState(e: { code?: unknown; cause?: unknown }, depth = 0): string | undefined {
+  if (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code)) return e.code;
+  if (e.cause && typeof e.cause === 'object' && depth < 3) return findSqlState(e.cause as { code?: unknown; cause?: unknown }, depth + 1);
+  return undefined;
 }

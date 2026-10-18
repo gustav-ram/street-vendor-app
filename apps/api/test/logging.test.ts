@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { safeError } from '../src/lib/logging';
 import { createTestContext, MOBILE, resetDb } from './helpers';
 
 let ctx: Awaited<ReturnType<typeof createTestContext>>;
@@ -27,5 +28,24 @@ describe('request logging', () => {
     for (const secret of [email, 'correct-horse-battery', '34.05123', '-118.25456', '203.0.113.9', '198.51.100.7', 'nowhere', '34.067', '118.298', 'secret tamales']) {
       expect(output).not.toContain(secret);
     }
+  });
+});
+
+describe('error logging', () => {
+  it('reduces database errors to their SQLSTATE code, dropping query parameters', () => {
+    const cause = Object.assign(new Error('invalid input syntax for type double precision: "34.0512"'), { code: '22P02' });
+    const err = Object.assign(new Error('Failed query: update vendor_live_sessions set ...\nparams: 34.0512,-118.2534'), {
+      name: 'DrizzleQueryError',
+      cause,
+    });
+    const logged = JSON.stringify(safeError(err));
+    expect(logged).toContain('22P02');
+    expect(logged).not.toContain('34.0512');
+    expect(logged).not.toContain('118.2534');
+    expect(logged).not.toContain('vendor_live_sessions');
+  });
+
+  it('keeps ordinary errors readable', () => {
+    expect(safeError(new TypeError('boom'))).toMatchObject({ type: 'TypeError', message: 'boom' });
   });
 });

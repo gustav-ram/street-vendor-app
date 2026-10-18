@@ -7,3 +7,4 @@ export * from './schemas/auth';
 export * from './schemas/errors';
 export * from './schemas/vendor';
 export * from './schemas/search';
+export * from './schemas/dashboard';
