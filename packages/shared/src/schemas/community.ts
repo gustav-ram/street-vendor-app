@@ -32,6 +32,8 @@ export type UploadState = z.infer<typeof uploadStateSchema>;
 const caption = z.string().trim().max(LIMITS.photoCaptionMax).optional();
 
 export const vendorPhotoCreateSchema = z.object({
+  /** Made on the phone (offline outbox), so sending the same photo twice adds it once. */
+  id: z.uuid().optional(),
   uploadId: z.uuid(),
   kind: z.enum(VENDOR_PHOTO_KINDS),
   caption,

@@ -131,6 +131,21 @@ describe('photo pipeline', () => {
     expect(res.statusCode).toBe(201);
   });
 
+  it('a queued photo sent twice (the reply was lost) is added once', async () => {
+    const v = await onboardedVendor(ctx);
+    const uploadId = await uploadBytes(ctx, v.headers, await phonePhoto());
+    const id = crypto.randomUUID();
+    const send = () => ctx.app.inject({ method: 'POST', url: '/v1/vendor/photos', headers: v.headers, payload: { id, uploadId, kind: 'gallery' } });
+    expect((await send()).json()).toMatchObject({ id, moderation: 'approved' });
+    expect((await send()).json()).toMatchObject({ id, moderation: 'approved' });
+    expect((await get('/v1/vendor/photos', v.headers)).json().gallery).toHaveLength(1);
+    // Someone else can't claim that id.
+    const other = await onboardedVendor(ctx);
+    const theirs = await uploadBytes(ctx, other.headers, await phonePhoto());
+    const res = await ctx.app.inject({ method: 'POST', url: '/v1/vendor/photos', headers: other.headers, payload: { id, uploadId: theirs, kind: 'gallery' } });
+    expect(res.statusCode).toBe(404);
+  });
+
   it("uploads belong to whoever started them", async () => {
     const v = await onboardedVendor(ctx);
     const other = await onboardedVendor(ctx);

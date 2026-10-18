@@ -51,6 +51,12 @@ export async function deletePhotos(ctx: AppContext, ids: string[]) {
 
 /** Vendor photos are approved automatically; a new profile or cover photo replaces the old one. */
 export async function addVendorPhoto(ctx: AppContext, vendorId: string, userId: string, input: VendorPhotoCreateInput) {
+  if (input.id) {
+    // A retry of a photo that already went through (the reply was lost).
+    const [done] = await ctx.db.select({ vendorId: photos.vendorId, moderation: photos.moderation }).from(photos).where(eq(photos.id, input.id));
+    if (done && done.vendorId !== vendorId) throw new ApiError('not_found');
+    if (done) return { id: input.id, moderation: done.moderation };
+  }
   if (input.kind === 'gallery') {
     const count = await ctx.db.$count(photos, and(eq(photos.vendorId, vendorId), eq(photos.kind, 'gallery')));
     if (count >= GALLERY_MAX) throw new ApiError('conflict');
@@ -59,6 +65,7 @@ export async function addVendorPhoto(ctx: AppContext, vendorId: string, userId: 
   const [photo] = await ctx.db
     .insert(photos)
     .values({
+      ...(input.id ? { id: input.id } : {}),
       vendorId,
       uploaderUserId: userId,
       source: 'vendor',
