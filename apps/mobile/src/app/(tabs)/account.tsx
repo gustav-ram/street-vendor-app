@@ -28,7 +28,7 @@ export default function AccountScreen() {
             {me.role === 'vendor' ? (
               <Button label={`🛒 ${td('openDashboard')}`} onPress={() => router.push('/dashboard')} style={{ alignSelf: 'stretch' }} />
             ) : (
-              <Text style={styles.muted}>{ta('customerSoon')}</Text>
+              <Button variant="dark" label={`♥ ${t('nav.favorites')}`} onPress={() => router.push('/favorites')} style={{ alignSelf: 'stretch' }} />
             )}
             <Button
               variant="outline"

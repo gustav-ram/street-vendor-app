@@ -10,7 +10,8 @@ export class ApiRequestError extends Error {
   }
 }
 
-export async function request<T>(path: string, init: RequestInit = {}, token?: string | null): Promise<T> {
+/** The raw response (for headers such as Upload-Offset); throws ApiRequestError when it isn't OK. */
+export async function rawRequest(path: string, init: RequestInit = {}, token?: string | null): Promise<Response> {
   const headers: Record<string, string> = { 'x-client': 'mobile' };
   if (init.body) headers['content-type'] = 'application/json';
   if (token) headers.authorization = `Bearer ${token}`;
@@ -20,10 +21,17 @@ export async function request<T>(path: string, init: RequestInit = {}, token?: s
   } catch {
     throw new ApiRequestError('network', 0);
   }
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiRequestError(body?.error?.code ?? 'internal', res.status);
+  }
+  return res;
+}
+
+export async function request<T>(path: string, init: RequestInit = {}, token?: string | null): Promise<T> {
+  const res = await rawRequest(path, init, token);
   if (res.status === 204) return undefined as T;
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiRequestError(body?.error?.code ?? 'internal', res.status);
-  return body as T;
+  return (await res.json().catch(() => null)) as T;
 }
 
 export const api = {

@@ -18,6 +18,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: t('nav.map'), tabBarIcon: icon('🗺️') }} />
+      <Tabs.Screen name="favorites" options={{ title: t('nav.favorites'), tabBarIcon: icon('♥️') }} />
       <Tabs.Screen name="account" options={{ title: t('nav.account'), tabBarIcon: icon('👤') }} />
     </Tabs>
   );

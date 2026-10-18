@@ -1,12 +1,17 @@
 import type {
+  Block,
+  BlockInput,
   GoLiveInput,
   HeartbeatInput,
   LiveStatus,
   MenuItemInput,
+  MyPhotos,
   MyVendor,
   QuickStartInput,
   StatusPostInput,
+  VendorPhotoKind,
   VendorProfileUpdate,
+  VendorReview,
   WriteResult,
 } from '@streeteats/shared';
 import { authRequest } from '@/auth/session';
@@ -36,5 +41,25 @@ export const vendorApi = {
   status: {
     put: (id: string, post: StatusPostInput) => authRequest<WriteResult>(`/v1/vendor/status/${id}`, json('PUT', post)),
     remove: (id: string) => authRequest<WriteResult>(`/v1/vendor/status/${id}`, json('DELETE', { clientUpdatedAt: new Date().toISOString() })),
+  },
+
+  photos: {
+    list: () => authRequest<MyPhotos>('/v1/vendor/photos'),
+    add: (uploadId: string, kind: VendorPhotoKind, caption?: string) =>
+      authRequest<{ id: string }>('/v1/vendor/photos', json('POST', { uploadId, kind, caption })),
+    remove: (id: string) => authRequest<{ ok: true }>(`/v1/vendor/photos/${id}`, json('DELETE')),
+    hide: (id: string, hidden: boolean) => authRequest<{ ok: true }>(`/v1/vendor/customer-photos/${id}`, json('PATCH', { hidden })),
+  },
+
+  reviews: {
+    list: () => authRequest<{ reviews: VendorReview[] }>('/v1/vendor/reviews'),
+    reply: (id: string, body: string) => authRequest<{ ok: true }>(`/v1/vendor/reviews/${id}/reply`, json('PUT', { body })),
+    deleteReply: (id: string) => authRequest<{ ok: true }>(`/v1/vendor/reviews/${id}/reply`, json('DELETE')),
+  },
+
+  blocks: {
+    list: () => authRequest<{ blocks: Block[] }>('/v1/vendor/blocks'),
+    add: (input: BlockInput) => authRequest<{ ok: true }>('/v1/vendor/blocks', json('POST', input)),
+    remove: (id: string) => authRequest<{ ok: true }>(`/v1/vendor/blocks/${encodeURIComponent(id)}`, json('DELETE')),
   },
 };

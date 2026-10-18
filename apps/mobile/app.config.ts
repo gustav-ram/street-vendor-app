@@ -53,6 +53,15 @@ const config: ExpoConfig = {
         isAndroidBackgroundLocationEnabled: false,
       },
     ],
+    [
+      'expo-image-picker',
+      {
+        // Photo library only: no camera or microphone access is requested.
+        photosPermission: 'StreetEats lets you choose photos of food and items to share. Location and camera details are removed before upload.',
+        cameraPermission: false,
+        microphonePermission: false,
+      },
+    ],
   ],
   experiments: { typedRoutes: true },
   extra: {

@@ -2,7 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 import * as SecureStore from 'expo-secure-store';
 import { useSyncExternalStore } from 'react';
 import type { AuthResponse, Me, RegisterInput } from '@streeteats/shared';
-import { ApiRequestError, request } from '@/api/client';
+import { ApiRequestError, rawRequest, request } from '@/api/client';
 
 /**
  * Session handling. The refresh token lives in the iOS Keychain
@@ -108,6 +108,23 @@ export async function signOut() {
   const token = await SecureStore.getItemAsync(REFRESH_KEY).catch(() => null);
   if (token) await request('/v1/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken: token }) }).catch(() => {});
   await clear();
+}
+
+/** Like authRequest, but returns the raw response (for headers). */
+export async function authResponse(path: string, init: RequestInit = {}): Promise<Response> {
+  if (!accessToken) await refresh();
+  try {
+    return await rawRequest(path, init, accessToken);
+  } catch (err) {
+    if (err instanceof ApiRequestError && err.status === 401 && (await refresh())) return rawRequest(path, init, accessToken);
+    throw err;
+  }
+}
+
+/** Headers for <Image> sources that aren't public (e.g. a customer photo the vendor hid). */
+export async function mediaHeaders(): Promise<Record<string, string>> {
+  if (!accessToken) await refresh();
+  return accessToken ? { authorization: `Bearer ${accessToken}`, 'x-client': 'mobile' } : {};
 }
 
 /** Authenticated request: refreshes once on 401 and retries. */

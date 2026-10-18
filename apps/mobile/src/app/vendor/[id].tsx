@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { VendorProfile } from '@streeteats/shared';
+import { minutesAgo, type ReportTarget, type VendorProfile } from '@streeteats/shared';
 import { api, ApiRequestError } from '@/api/client';
+import { useAuth } from '@/auth/session';
+import { PhotoStrip, ReportSheet } from '@/components/community';
 import { Button } from '@/components/ui';
+import { VendorActions } from '@/components/VendorActions';
 import { CategoryIcon, DirectionsButton, LiveLine, PaymentBadges, Rating, StatusBanner, VerifiedBadge } from '@/components/vendor';
 import { useFormat } from '@/hooks/useFormat';
+import { useNow } from '@/hooks/useNow';
 import { colors, space, type } from '@/theme';
 
 // One aggregate "profile view" per vendor per app session. Nothing about who.
@@ -30,11 +34,27 @@ function daysSince(iso: string) {
   return Math.round((b - a) / 86_400_000);
 }
 
+/** "A customer confirmed they're here 12 minutes ago" */
+function CustomerConfirmed({ iso }: { iso: string }) {
+  const { t } = useTranslation('community');
+  const mins = minutesAgo(iso, useNow());
+  // (Hermes has no Intl.RelativeTimeFormat, so the wording comes from the translations.)
+  return (
+    <Text style={[styles.strong, { color: colors.live }]}>
+      ✓ {mins < 1 ? t('stillHere.customerConfirmedJustNow') : t('stillHere.customerConfirmed', { count: mins })}
+    </Text>
+  );
+}
+
 function Profile({ v }: { v: VendorProfile }) {
   const { t, i18n } = useTranslation('vendor');
   const { t: tc } = useTranslation('catalog');
   const { t: ts } = useTranslation('search');
+  const { t: tm } = useTranslation('community');
+  const { status } = useAuth();
   const f = useFormat();
+  const [reporting, setReporting] = useState<{ type: ReportTarget; id: string } | null>(null);
+  const canReport = status === 'signedIn';
 
   const lastActive = (() => {
     if (!v.lastActiveAt) return t('lastActive.long');
@@ -47,8 +67,13 @@ function Profile({ v }: { v: VendorProfile }) {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      {v.photos.cover && <Image source={{ uri: v.photos.cover.url }} style={styles.cover} accessibilityIgnoresInvertColors />}
       <View style={styles.header}>
-        <CategoryIcon category={v.categories[0]} size={64} />
+        {v.photos.profile ? (
+          <Image source={{ uri: v.photos.profile.thumbUrl }} style={styles.avatar} />
+        ) : (
+          <CategoryIcon category={v.categories[0]} size={64} />
+        )}
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={styles.name}>{v.displayName}</Text>
           <Text style={styles.muted}>
@@ -63,6 +88,7 @@ function Profile({ v }: { v: VendorProfile }) {
       {v.live ? (
         <View style={[styles.box, styles.liveBox]}>
           <LiveLine live={v.live} />
+          {v.live.customerConfirmedAt && <CustomerConfirmed iso={v.live.customerConfirmedAt} />}
           <Text style={styles.muted}>📍 {v.live.location.precision === 'approximate' ? ts('live.approximate') : ts('live.exact')}</Text>
           <DirectionsButton vendorId={v.id} location={v.live.location} />
         </View>
@@ -73,7 +99,26 @@ function Profile({ v }: { v: VendorProfile }) {
         </View>
       )}
 
+      <VendorActions v={v} onReport={setReporting} />
+
       {v.status && <StatusBanner text={v.status} />}
+
+      {(v.photos.gallery.length > 0 || v.photos.customer.length > 0) && (
+        <Section title={tm('photos.title')}>
+          {v.photos.gallery.length > 0 && (
+            <>
+              <Text style={styles.muted}>{tm('photos.fromVendor')}</Text>
+              <PhotoStrip photos={v.photos.gallery} onReport={canReport ? setReporting : undefined} />
+            </>
+          )}
+          {v.photos.customer.length > 0 && (
+            <>
+              <Text style={styles.muted}>{tm('photos.fromCustomers')}</Text>
+              <PhotoStrip photos={v.photos.customer} onReport={canReport ? setReporting : undefined} />
+            </>
+          )}
+        </Section>
+      )}
 
       <Section title={t('menu')}>
         {v.menu.length === 0 ? (
@@ -168,10 +213,16 @@ function Profile({ v }: { v: VendorProfile }) {
                   <Text style={styles.body}>{r.vendorReply}</Text>
                 </View>
               ) : null}
+              {canReport && (
+                <Text style={styles.reportLink} accessibilityRole="button" onPress={() => setReporting({ type: 'review', id: r.id })}>
+                  ⚑ {tm('report.review')}
+                </Text>
+              )}
             </View>
           ))
         )}
       </Section>
+      <ReportSheet target={reporting} onClose={() => setReporting(null)} />
     </ScrollView>
   );
 }
@@ -229,4 +280,7 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tag: { backgroundColor: colors.sand, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: type.small, fontWeight: '600', color: colors.ink },
   reply: { borderLeftWidth: 4, borderLeftColor: colors.chile, paddingLeft: space.sm, marginTop: 4, gap: 2 },
+  reportLink: { alignSelf: 'flex-end', color: colors.inkSoft, fontWeight: '700', fontSize: type.small, paddingVertical: 6 },
+  cover: { width: '100%', aspectRatio: 3, borderRadius: 20, backgroundColor: colors.sand },
+  avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: colors.white, backgroundColor: colors.sand },
 });
