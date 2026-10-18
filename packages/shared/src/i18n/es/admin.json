@@ -21,5 +21,20 @@
     "review": "Reseña",
     "status_post": "Aviso",
     "upcoming_post": "Próximo lugar"
-  }
+  },
+  "badges": "Insignias de verificación",
+  "badgesHint": "Quite una insignia si se está abusando, por ejemplo con confirmaciones falsas. Queda quitada hasta que usted la restaure.",
+  "findVendor": "Buscar un vendedor por nombre",
+  "revoke": "Quitar insignia",
+  "restore": "Restaurar",
+  "revokeReason": "Motivo (el vendedor lo ve)",
+  "statuses": {
+    "none": "Sin insignia",
+    "verified": "Verificado",
+    "revoked": "Quitada"
+  },
+  "liveDays_one": "{{count}} día abierto",
+  "liveDays_other": "{{count}} días abierto",
+  "noVendors": "No se encontraron vendedores.",
+  "since": "Desde {{date}}"
 }

@@ -22,5 +22,6 @@
   "too_far": "You need to be near the vendor to confirm they're here.",
   "account_too_new": "New accounts can confirm vendors after their first day.",
   "internal": "Something went wrong on our side. Please try again.",
-  "network": "No connection. Check your signal and try again."
+  "network": "No connection. Check your signal and try again.",
+  "window_ended": "That time has already passed."
 }

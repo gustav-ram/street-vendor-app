@@ -54,5 +54,18 @@
     "post": "Planned",
     "schedule": "Usually here",
     "when": "{{start}} – {{end}}"
-  }
+  },
+  "tabs": {
+    "now": "Open now",
+    "upcoming": "Upcoming"
+  },
+  "upcomingEmpty": "No planned spots nearby in the next 2 days.",
+  "upcomingHint": "Vendors post where they'll be. Save your favorites to see all their plans.",
+  "fromFavorites": "From your favorites",
+  "days": {
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
+  "upcomingResults_one": "{{count}} planned nearby",
+  "upcomingResults_other": "{{count}} planned nearby"
 }

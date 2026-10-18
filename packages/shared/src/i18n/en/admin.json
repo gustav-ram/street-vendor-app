@@ -21,5 +21,20 @@
     "review": "Review",
     "status_post": "Update",
     "upcoming_post": "Upcoming spot"
-  }
+  },
+  "badges": "Community Verified badges",
+  "badgesHint": "Revoke a badge if it's being abused, for example with fake confirmations. It stays off until you restore it.",
+  "findVendor": "Find a vendor by name",
+  "revoke": "Revoke badge",
+  "restore": "Restore",
+  "revokeReason": "Reason (the vendor sees this)",
+  "statuses": {
+    "none": "No badge",
+    "verified": "Verified",
+    "revoked": "Revoked"
+  },
+  "liveDays_one": "{{count}} day live",
+  "liveDays_other": "{{count}} days live",
+  "noVendors": "No vendors found.",
+  "since": "Since {{date}}"
 }

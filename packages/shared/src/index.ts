@@ -15,3 +15,5 @@ export * from './outbox/core';
 export * from './outbox/rebase';
 export * from './live/controller';
 export * from './upload/client';
+export * from './upcoming';
+export * from './badge';

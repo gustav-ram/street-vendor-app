@@ -54,5 +54,18 @@
     "post": "Planeado",
     "schedule": "Suele estar aquí",
     "when": "{{start}} – {{end}}"
-  }
+  },
+  "tabs": {
+    "now": "Abiertos ahora",
+    "upcoming": "Próximos"
+  },
+  "upcomingEmpty": "No hay lugares planeados cerca en los próximos 2 días.",
+  "upcomingHint": "Los vendedores publican dónde van a estar. Guarde sus favoritos para ver todos sus planes.",
+  "fromFavorites": "De sus favoritos",
+  "days": {
+    "today": "Hoy",
+    "tomorrow": "Mañana"
+  },
+  "upcomingResults_one": "{{count}} planeado cerca",
+  "upcomingResults_other": "{{count}} planeados cerca"
 }

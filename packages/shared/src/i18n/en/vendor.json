@@ -33,5 +33,6 @@
   "contact": "Contact",
   "notFound": "This vendor isn't available.",
   "todayStatus": "Today",
-  "backToMap": "Back to map"
+  "backToMap": "Back to map",
+  "verifiedHow": "How is this earned?"
 }

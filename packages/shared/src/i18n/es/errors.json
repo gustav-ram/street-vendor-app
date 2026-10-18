@@ -22,5 +22,6 @@
   "too_far": "Tienes que estar cerca del vendedor para confirmar que está aquí.",
   "account_too_new": "Las cuentas nuevas pueden confirmar vendedores después de su primer día.",
   "internal": "Algo salió mal de nuestro lado. Intenta de nuevo.",
-  "network": "Sin conexión. Revisa tu señal e intenta de nuevo."
+  "network": "Sin conexión. Revisa tu señal e intenta de nuevo.",
+  "window_ended": "Ese horario ya pasó."
 }
