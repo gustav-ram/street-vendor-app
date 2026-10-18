@@ -58,7 +58,7 @@ async function trustedVendor() {
     [2, 1],
     [0, 0],
   ] as const) {
-    expect((await confirm(v.vendorId, people[who].headers)).json().status).toBe('confirmed');
+    expect((await confirm(v.vendorId, people[who]!.headers)).json().status).toBe('confirmed');
     if (days) await backdateLatest(v.vendorId, days);
   }
   for (const p of people) await call('PUT', `/v1/vendors/${v.vendorId}/review`, p.headers, { rating: 5, body: 'Great' });
@@ -139,7 +139,7 @@ describe('"Community Verified" badge', () => {
 
     // Upholding a report about a customer's review on their page doesn't count against the vendor.
     const [review] = await ctx.db.execute<{ id: string }>(sql`SELECT id FROM reviews WHERE vendor_id = ${v.vendorId} LIMIT 1`);
-    await call('POST', '/v1/reports', v.people[0].headers, { targetType: 'review', targetId: review!.id, reason: 'offensive' });
+    await call('POST', '/v1/reports', v.people[0]!.headers, { targetType: 'review', targetId: review!.id, reason: 'offensive' });
     const reviewReport = (await call('GET', '/v1/admin/reports', admin.headers)).json().reports.find((r: { targetType: string }) => r.targetType === 'review');
     await call('POST', `/v1/admin/reports/${reviewReport.id}`, admin.headers, { status: 'upheld' });
     expect((await progress(v.headers)).progress.reports).toEqual({ upheld: 0, met: true });
@@ -147,7 +147,7 @@ describe('"Community Verified" badge', () => {
     // Upholding one about the vendor's own post does, even though the post itself is deleted.
     const postId = crypto.randomUUID();
     await call('PUT', `/v1/vendor/status/${postId}`, v.headers, { body: 'Cheap stuff, DM me', clientUpdatedAt: new Date().toISOString() });
-    await call('POST', '/v1/reports', v.people[1].headers, { targetType: 'status_post', targetId: postId, reason: 'spam' });
+    await call('POST', '/v1/reports', v.people[1]!.headers, { targetType: 'status_post', targetId: postId, reason: 'spam' });
     const postReport = (await call('GET', '/v1/admin/reports', admin.headers)).json().reports.find((r: { targetType: string }) => r.targetType === 'status_post');
     await call('POST', `/v1/admin/reports/${postReport.id}`, admin.headers, { status: 'upheld' });
 
