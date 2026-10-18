@@ -5,6 +5,7 @@ import { createDb, type Db } from '../src/db/client';
 import {
   inviteCodes,
   menuItems,
+  photos,
   reviews,
   scheduleEntries,
   tags,
@@ -17,12 +18,15 @@ import {
   verificationProgress,
 } from '../src/db/schema';
 import { publicLocation } from '../src/lib/geo/fuzz';
+import { processImage } from '../src/lib/images';
+import { createStorage, type Storage } from '../src/lib/storage';
 import { pointSql } from '../src/lib/geo/sql';
 import { isMain } from '../src/lib/is-main';
 import { hashSecret } from '../src/lib/passwords';
 import { priceLevelFromMenu } from '../src/lib/price';
 import { localDay, localTimeOnDay } from '../src/lib/time';
 import { DEMO_ACCOUNTS, DEMO_INVITE, DEMO_PASSWORD, DEMO_REVIEWERS } from './seed-data/accounts';
+import { placeholderCard, placeholderInitials } from './seed-data/photos';
 import { REVIEW_TEXT } from './seed-data/reviews';
 import { TAGS } from './seed-data/tags';
 import { VENDORS } from './seed-data/vendors';
@@ -39,6 +43,20 @@ function mulberry32(seed: number) {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+/** Cuts at a word boundary, with an ellipsis. */
+const shorten = (text: string, max: number) =>
+  text.length <= max ? text : `${text.slice(0, max).replace(/\s+\S*$/, '').replace(/[,;:]$/, '')}…`;
+
+/** Runs a placeholder through the same pipeline as real uploads. */
+async function storeSeedPhoto(storage: Storage, png: Buffer, maxPixels: number) {
+  const image = await processImage(png, maxPixels);
+  const storageKey = storage.newKey();
+  const thumbKey = storage.newKey();
+  await storage.savePhoto(storageKey, image.full);
+  await storage.savePhoto(thumbKey, image.thumb);
+  return { storageKey, thumbKey, width: image.width, height: image.height };
 }
 
 export async function seedTags(db: Db) {
@@ -59,18 +77,28 @@ export async function seedTags(db: Db) {
 
 export async function seed(db: Db) {
   const config = loadConfig();
+  const storage = createStorage(config.uploadDir);
   const fuzz = { secret: config.fuzzSecret, cellMeters: config.approxCellMeters };
   const rand = mulberry32(2026);
   const now = new Date();
 
-  await clearDemoData(db);
+  await clearDemoData(db, storage);
   const tagIds = await seedTags(db);
   const passwordHash = await hashSecret(DEMO_PASSWORD);
 
   const insertUser = async (v: { email: string; role: 'customer' | 'vendor' | 'admin'; displayName?: string; locale?: string }) => {
     const [u] = await db
       .insert(users)
-      .values({ email: v.email, role: v.role, displayName: v.displayName ?? null, locale: v.locale ?? 'en', passwordHash, isDemo: true })
+      .values({
+        email: v.email,
+        role: v.role,
+        displayName: v.displayName ?? null,
+        locale: v.locale ?? 'en',
+        passwordHash,
+        isDemo: true,
+        // A month old, so the demo customer can try "Still here?" (new accounts wait a day).
+        createdAt: new Date(now.getTime() - 30 * 86_400_000),
+      })
       .returning({ id: users.id });
     return u!.id;
   };
@@ -85,6 +113,21 @@ export async function seed(db: Db) {
 
   let upcomingCount = 0;
   let reviewCount = 0;
+  let photoCount = 0;
+  const addPhoto = async (
+    vendorId: string,
+    png: Buffer,
+    values: { uploaderUserId: string; source: 'vendor' | 'customer'; kind: 'profile' | 'cover' | 'gallery' | 'customer'; caption?: string; moderation?: 'approved' | 'pending' },
+  ) => {
+    const stored = await storeSeedPhoto(storage, png, config.photoMaxPixels);
+    const [row] = await db
+      .insert(photos)
+      .values({ vendorId, moderation: 'approved', caption: null, ...values, ...stored })
+      .returning({ id: photos.id });
+    photoCount++;
+    return row!.id;
+  };
+  let dangerDogsId: string | null = null;
   for (const v of VENDORS) {
     const email = v.key === DEMO_ACCOUNTS.vendor.vendorKey ? DEMO_ACCOUNTS.vendor.email : `vendor-${v.key}@demo.test`;
     const userId = await insertUser({ email, role: 'vendor', locale: v.languages[0] === 'en' ? 'en' : 'es' });
@@ -107,6 +150,23 @@ export async function seed(db: Db) {
       })
       .returning({ id: vendorProfiles.id });
     const vendorId = profile!.id;
+    if (v.key === DEMO_ACCOUNTS.vendor.vendorKey) dangerDogsId = vendorId;
+
+    // Sample photos: initials for the profile, a cover, and a card for the first menu item.
+    const category = v.categories[0]!;
+    const asVendor = { uploaderUserId: userId, source: 'vendor' as const };
+    const profilePhotoId = await addPhoto(vendorId, await placeholderInitials(category, v.name), { ...asVendor, kind: 'profile' });
+    const coverPhotoId = await addPhoto(vendorId, await placeholderCard(category, v.name, shorten(v.description.split('.')[0]!, 44)), {
+      ...asVendor,
+      kind: 'cover',
+    });
+    const [firstItem, firstPrice] = v.menu[0]!;
+    await addPhoto(vendorId, await placeholderCard(category, firstItem, `$${(firstPrice / 100).toFixed(2)} · ${v.name}`), {
+      ...asVendor,
+      kind: 'gallery',
+      caption: firstItem,
+    });
+    await db.update(vendorProfiles).set({ profilePhotoId, coverPhotoId }).where(sql`${vendorProfiles.id} = ${vendorId}`);
 
     await db.insert(menuItems).values(
       v.menu.map(([name, priceCents, description], i) => ({
@@ -194,9 +254,27 @@ export async function seed(db: Db) {
     });
   }
 
+  // Customer photos on Danger Dogs: one approved, one waiting in the moderation queue for admin@demo.test.
+  if (dangerDogsId) {
+    const [customer] = await db.select({ id: users.id }).from(users).where(sql`${users.email} = ${DEMO_ACCOUNTS.customer.email}`);
+    await addPhoto(dangerDogsId, await placeholderCard('hot_dogs', 'Danger Dog + onions', 'From a customer'), {
+      uploaderUserId: customer!.id,
+      source: 'customer',
+      kind: 'customer',
+      caption: 'After the Dodgers game',
+    });
+    await addPhoto(dangerDogsId, await placeholderCard('hot_dogs', 'Chiles toreados', 'Waiting for a moderator'), {
+      uploaderUserId: customer!.id,
+      source: 'customer',
+      kind: 'customer',
+      caption: 'Los chiles toreados',
+      moderation: 'pending',
+    });
+  }
+
   await db.insert(inviteCodes).values({ code: DEMO_INVITE.code, label: DEMO_INVITE.label, isDemo: true });
 
-  return { vendors: VENDORS.length, tags: TAGS.length, upcomingPosts: upcomingCount, reviews: reviewCount };
+  return { vendors: VENDORS.length, tags: TAGS.length, upcomingPosts: upcomingCount, reviews: reviewCount, photos: photoCount };
 }
 
 if (isMain(import.meta.url)) {
@@ -210,7 +288,7 @@ if (isMain(import.meta.url)) {
     }
     const r = await seed(db);
     console.log(
-      `Seeded ${r.vendors} demo vendors, ${r.tags} tags, ${r.reviews} reviews and ${r.upcomingPosts} "tomorrow" posts.\n` +
+      `Seeded ${r.vendors} demo vendors, ${r.tags} tags, ${r.reviews} reviews, ${r.photos} sample photos and ${r.upcomingPosts} "tomorrow" posts.\n` +
         'Demo logins are listed in README.md. Remove all demo data with: npm run seed:clear',
     );
   } finally {
