@@ -38,7 +38,22 @@ const config: ExpoConfig = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
   },
-  plugins: ['expo-router', 'expo-status-bar', 'expo-localization', 'expo-sqlite'],
+  plugins: [
+    'expo-router',
+    'expo-status-bar',
+    'expo-localization',
+    'expo-sqlite',
+    [
+      'expo-location',
+      {
+        // Foreground only: StreetEats never tracks location in the background.
+        locationWhenInUsePermission:
+          'StreetEats uses your location to show vendors near you. It is only used for the search and never saved.',
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
+      },
+    ],
+  ],
   experiments: { typedRoutes: true },
   extra: {
     // The iOS Simulator shares the Mac's network, so localhost reaches the API.
