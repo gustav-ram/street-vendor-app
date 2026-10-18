@@ -10,9 +10,11 @@ export interface Origin extends LatLng {
 export type LocateState = "idle" | "locating" | "denied" | "unavailable";
 
 export interface ExploreFilters extends Required<SearchFilters> {
-  openNow: boolean;
   radiusM: number;
 }
+
+/** The two tabs on the map: who's open right now, and who's coming (tomorrow posts, schedules). */
+export type ExploreMode = "now" | "upcoming";
 
 export function activeFilterCount(f: ExploreFilters, defaults: ExploreFilters) {
   return (
@@ -20,7 +22,6 @@ export function activeFilterCount(f: ExploreFilters, defaults: ExploreFilters) {
     f.priceLevels.length +
     f.paymentMethods.length +
     f.languages.length +
-    (f.openNow !== defaults.openNow ? 1 : 0) +
     (f.radiusM !== defaults.radiusM ? 1 : 0)
   );
 }

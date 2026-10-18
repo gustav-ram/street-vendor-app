@@ -1,4 +1,4 @@
-import type { ErrorCode, SearchRequest, SearchResponse, VendorProfile } from "@streeteats/shared";
+import type { ErrorCode, MetaResponse, SearchRequest, SearchResponse, VendorProfile } from "@streeteats/shared";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
 
@@ -27,6 +27,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  meta: () => request<MetaResponse>("/v1/meta"),
   // POST so the (already coarsened) location stays out of URLs and history.
   search: (body: SearchRequest) => request<SearchResponse>("/v1/search", { method: "POST", body: JSON.stringify(body) }),
   vendor: (id: string) => request<VendorProfile>(`/v1/vendors/${encodeURIComponent(id)}`),

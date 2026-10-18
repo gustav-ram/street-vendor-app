@@ -74,18 +74,6 @@ export function FiltersDialog({
           </button>
         </div>
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
-          <label className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4">
-            <span>
-              <span className="block text-lg font-extrabold">{t("openNow")}</span>
-              <span className="text-sm text-ink-soft">{t("openNowHint")}</span>
-            </span>
-            <input
-              type="checkbox"
-              className="size-7 accent-live"
-              checked={draft.openNow}
-              onChange={(e) => setDraft({ ...draft, openNow: e.target.checked })}
-            />
-          </label>
           <Section title={t("radius")}>
             {RADIUS_OPTIONS_M.map((m) => (
               <Chip key={m} on={draft.radiusM === m} onClick={() => setDraft({ ...draft, radiusM: m })}>

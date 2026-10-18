@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AdminReport } from "@streeteats/shared";
+import type { AdminReport, AdminVendor } from "@streeteats/shared";
 import { adminApi, useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { useErrorText } from "../community/dialogs";
@@ -88,6 +88,98 @@ function ReportCard({ r, lang, onDone, onError }: { r: AdminReport; lang: string
         </button>
       </div>
     </li>
+  );
+}
+
+/** One vendor's badge, with revoke (reason required, the vendor sees it) or restore. */
+function BadgeRow({ v, lang, onDone, onError }: { v: AdminVendor; lang: string; onDone: () => void; onError: (e: unknown) => void }) {
+  const { t, i18n } = useTranslation("admin");
+  const [reason, setReason] = useState("");
+  const [revoking, setRevoking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const date = (iso: string) => new Intl.DateTimeFormat(i18n.language === "es" ? "es-US" : "en-US", { dateStyle: "medium" }).format(new Date(iso));
+  const act = async (fn: () => Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await fn();
+      setRevoking(false);
+      setReason("");
+      onDone();
+    } catch (err) {
+      onError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const chip = v.status === "verified" ? "bg-live text-white" : v.status === "revoked" ? "bg-chile text-white" : "bg-sand";
+  return (
+    <li className="flex flex-col gap-3 rounded-3xl border-2 border-ink/10 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Link href={`/${lang}/v/${v.id}`} target="_blank" className="text-lg font-extrabold hover:underline">
+          {v.displayName} ↗
+        </Link>
+        <span className={`rounded-full px-3 py-1 text-sm font-bold ${chip}`}>{t(`statuses.${v.status}`)}</span>
+        <span className="text-sm text-ink-soft">{t("liveDays", { count: v.liveDays })}</span>
+        {v.status === "verified" && v.verifiedAt && <span className="text-sm text-ink-soft">{t("since", { date: date(v.verifiedAt) })}</span>}
+      </div>
+      {v.status === "revoked" && v.revokedReason && <p className="rounded-xl bg-paper p-3">“{v.revokedReason}”</p>}
+      {revoking && (
+        <Field label={t("revokeReason")} value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} autoFocus />
+      )}
+      <div className="flex flex-wrap gap-2">
+        {v.status === "revoked" ? (
+          <button type="button" className={approveClass} disabled={busy} onClick={() => void act(() => adminApi.decideVerification(v.id, { action: "restore" }))}>
+            {t("restore")}
+          </button>
+        ) : revoking ? (
+          <button
+            type="button"
+            className={rejectClass}
+            disabled={busy || !reason.trim()}
+            onClick={() => void act(() => adminApi.decideVerification(v.id, { action: "revoke", reason: reason.trim() }))}
+          >
+            ✕ {t("revoke")}
+          </button>
+        ) : (
+          <button type="button" className={rejectClass} onClick={() => setRevoking(true)}>
+            {t("revoke")}
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function BadgesPanel({ lang, onError }: { lang: string; onError: (e: unknown) => void }) {
+  const { t } = useTranslation("admin");
+  const qc = useQueryClient();
+  const [input, setInput] = useState("");
+  const [q, setQ] = useState("");
+  const vendors = useQuery({ queryKey: ["admin", "vendors", q], queryFn: () => adminApi.vendors(q || undefined) });
+  return (
+    <Panel title={`🛡️ ${t("badges")}`}>
+      <p className="text-ink-soft">{t("badgesHint")}</p>
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setQ(input.trim());
+        }}
+      >
+        <div className="min-w-60 flex-1">
+          <Field label={t("findVendor")} value={input} maxLength={60} onChange={(e) => setInput(e.target.value)} type="search" />
+        </div>
+        <button type="submit" className={buttonClass.dark}>
+          🔍
+        </button>
+      </form>
+      {vendors.data?.vendors.length === 0 && <p className="text-ink-soft">{t("noVendors")}</p>}
+      <ul className="flex flex-col gap-3">
+        {vendors.data?.vendors.map((v) => (
+          <BadgeRow key={v.id} v={v} lang={lang} onDone={() => void qc.invalidateQueries({ queryKey: ["admin", "vendors"] })} onError={onError} />
+        ))}
+      </ul>
+    </Panel>
   );
 }
 
@@ -179,6 +271,8 @@ export function AdminView({ lang }: { lang: string }) {
           ))}
         </ul>
       </Panel>
+
+      <BadgesPanel lang={lang} onError={onError} />
     </main>
   );
 }

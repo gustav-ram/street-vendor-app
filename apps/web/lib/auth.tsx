@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   type AdminReport,
+  type AdminVendor,
   type AuthResponse,
   type Block,
   type BlockInput,
@@ -23,8 +24,10 @@ import {
   type ReportInput,
   type ReportStatus,
   type ReviewInput,
+  type ScheduleInput,
   type StatusPostInput,
   type StillHereResult,
+  type UpcomingPostInput,
   type UploadContentType,
   type UploadState,
   type UploadTransport,
@@ -32,6 +35,9 @@ import {
   type VendorPhotoKind,
   type VendorProfileUpdate,
   type VendorReview,
+  type VerificationDecision,
+  type VerificationProgress,
+  type VerificationStatus,
   type ViewerState,
   type WriteResult,
 } from "@streeteats/shared";
@@ -149,6 +155,14 @@ export const adminApi = {
   decideReport: (id: string, status: "dismissed" | "upheld" | "resolved", adminNote?: string) =>
     authed<Ok>(`/v1/admin/reports/${id}`, json("POST", { status, adminNote })),
   photoUrl: privatePhotoUrl,
+  vendors: (q?: string, status?: VerificationStatus) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (status) params.set("status", status);
+    return authed<{ vendors: AdminVendor[] }>(`/v1/admin/vendors?${params}`);
+  },
+  decideVerification: (vendorId: string, decision: VerificationDecision) =>
+    authed<VerificationProgress>(`/v1/admin/vendors/${vendorId}/verification`, json("POST", decision)),
 };
 
 export const vendorApi = {
@@ -172,6 +186,13 @@ export const vendorApi = {
     put: (id: string, post: StatusPostInput) => authed<WriteResult>(`/v1/vendor/status/${id}`, json("PUT", post)),
     remove: (id: string) => authed<WriteResult>(`/v1/vendor/status/${id}`, json("DELETE", { clientUpdatedAt: new Date().toISOString() })),
   },
+  upcoming: {
+    // The spot goes only to our API, which fuzzes it before storing (unless the vendor picked "exact").
+    put: (id: string, post: UpcomingPostInput) => authed<WriteResult>(`/v1/vendor/upcoming/${id}`, json("PUT", post)),
+    remove: (id: string) => authed<WriteResult>(`/v1/vendor/upcoming/${id}`, json("DELETE", { clientUpdatedAt: new Date().toISOString() })),
+  },
+  schedule: (input: ScheduleInput) => authed<MyVendor>("/v1/vendor/schedule", json("PUT", input)),
+  verification: () => authed<VerificationProgress>("/v1/vendor/verification"),
   photos: {
     list: () => authed<MyPhotos>("/v1/vendor/photos"),
     add: (uploadId: string, kind: VendorPhotoKind, caption?: string) =>

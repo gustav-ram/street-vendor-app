@@ -11,7 +11,7 @@ import { LocationBar } from "./LocationBar";
 import { ResultList } from "./ResultList";
 import { SearchBar } from "./SearchBar";
 import { SelectedCard } from "./SelectedCard";
-import { activeFilterCount, type ExploreFilters, type LocateState, type Origin } from "./types";
+import { activeFilterCount, type ExploreFilters, type ExploreMode, type LocateState, type Origin } from "./types";
 
 // Leaflet touches `window`, so the map only renders in the browser.
 const VendorMap = dynamic(() => import("./VendorMap"), {
@@ -24,7 +24,6 @@ export const DEFAULT_FILTERS: ExploreFilters = {
   priceLevels: [],
   paymentMethods: [],
   languages: [],
-  openNow: true,
   radiusM: DEFAULT_RADIUS_M,
 };
 
@@ -34,6 +33,7 @@ export function Explore() {
   const [locateState, setLocateState] = useState<LocateState>("idle");
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
+  const [mode, setMode] = useState<ExploreMode>("now");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -70,9 +70,8 @@ export function Explore() {
       .catch(() => {});
   }, [locate]);
 
-  const include = filters.openNow ? (["live"] as const) : (["live", "upcoming"] as const);
   const search = useQuery({
-    queryKey: ["search", origin.lat, origin.lng, q, filters],
+    queryKey: ["search", origin.lat, origin.lng, q, filters, mode],
     queryFn: () =>
       api.search({
         location: { lat: origin.lat, lng: origin.lng },
@@ -84,7 +83,7 @@ export function Explore() {
           paymentMethods: filters.paymentMethods,
           languages: filters.languages,
         },
-        include: [...include],
+        include: [mode === "now" ? "live" : "upcoming"],
       }),
     placeholderData: keepPreviousData,
   });
@@ -107,15 +106,24 @@ export function Explore() {
             >
               {filterCount ? t("filtersActive", { count: filterCount }) : t("filters")}
             </button>
-            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-ink bg-white px-4 font-bold">
-              <input
-                type="checkbox"
-                className="size-5 accent-live"
-                checked={filters.openNow}
-                onChange={(e) => setFilters((f) => ({ ...f, openNow: e.target.checked }))}
-              />
-              {t("openNow")}
-            </label>
+            <div role="tablist" aria-label={`${t("tabs.now")} / ${t("tabs.upcoming")}`} className="flex rounded-full border-2 border-ink p-0.5">
+              {(["now", "upcoming"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => {
+                    setMode(m);
+                    setSelectedId(null);
+                  }}
+                  className={`min-h-10 rounded-full px-4 font-bold ${mode === m ? (m === "now" ? "bg-live text-white" : "bg-ink text-white") : ""}`}
+                >
+                  {m === "now" ? "● " : "📅 "}
+                  {t(`tabs.${m}`)}
+                </button>
+              ))}
+            </div>
             <div role="group" aria-label={t("view.map") + " / " + t("view.list")} className="ml-auto flex rounded-full border-2 border-ink p-0.5 md:hidden">
               {(["map", "list"] as const).map((v) => (
                 <button
@@ -141,11 +149,11 @@ export function Explore() {
           <ResultList
             live={live}
             upcoming={upcoming}
-            showingUpcoming={!filters.openNow}
+            mode={mode}
             loading={search.isPending}
             error={search.isError}
             onRetry={() => void search.refetch()}
-            onShowUpcoming={() => setFilters((f) => ({ ...f, openNow: false }))}
+            onShowUpcoming={() => setMode("upcoming")}
             selectedId={selectedId}
             onSelect={(id) => {
               setSelectedId(id);
@@ -158,8 +166,8 @@ export function Explore() {
       <section className={`relative min-h-[60vh] flex-1 md:min-h-0 ${view === "list" ? "hidden md:block" : ""}`}>
         <VendorMap
           origin={origin}
-          live={live}
-          upcoming={upcoming}
+          live={mode === "now" ? live : []}
+          upcoming={mode === "upcoming" ? upcoming : []}
           selectedId={selectedId}
           onSelect={setSelectedId}
           onMoved={setMapCenter}

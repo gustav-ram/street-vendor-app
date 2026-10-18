@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { BadgePanel } from "./BadgePanel";
 import { GoLivePanel } from "./GoLivePanel";
 import { MenuEditor } from "./MenuEditor";
 import { PhotosManager } from "./PhotosManager";
 import { ProfileForm } from "./ProfileForm";
 import { ReviewsManager } from "./ReviewsManager";
+import { ScheduleEditor } from "./ScheduleEditor";
 import { StatusComposer } from "./StatusComposer";
+import { UpcomingManager } from "./UpcomingManager";
 import { VendorGate } from "./VendorGate";
 
 const linkClass = "inline-flex min-h-11 items-center rounded-full border-2 border-ink bg-white px-4 font-bold hover:bg-sand";
@@ -27,6 +30,9 @@ export function Dashboard({ lang }: { lang: string }) {
               <Link href={`/${lang}/v/${vendor.id}`} className={linkClass}>
                 👀 {t("viewPublicProfile")}
               </Link>
+              <Link href={`/${lang}/vendor/plans`} className={linkClass}>
+                📍 {t("actions.upcoming")}
+              </Link>
               <Link href={`/${lang}/vendor/photos`} className={linkClass}>
                 📷 {t("actions.photos")}
               </Link>
@@ -43,7 +49,10 @@ export function Dashboard({ lang }: { lang: string }) {
               <GoLivePanel vendor={vendor} />
               <StatusComposer vendor={vendor} />
             </div>
-            <MenuEditor vendor={vendor} />
+            <div className="flex flex-col gap-6">
+              <MenuEditor vendor={vendor} />
+              <BadgePanel />
+            </div>
           </div>
         </main>
       )}
@@ -75,6 +84,25 @@ export function PhotosPage({ lang }: { lang: string }) {
     <SubPage lang={lang} title={t("photos.title")} wide>
       <PhotosManager />
     </SubPage>
+  );
+}
+
+/** "Where I'll be" and the weekly schedule. */
+export function PlansPage({ lang }: { lang: string }) {
+  const { t } = useTranslation("dashboard");
+  return (
+    <VendorGate lang={lang} mode="dashboard">
+      {(vendor) => (
+        <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+          <Link href={`/${lang}/vendor`} className="w-fit font-bold text-chile">
+            ← {t("web.back")}
+          </Link>
+          <h1 className="text-4xl font-black">{t("upcoming.title")}</h1>
+          <UpcomingManager vendor={vendor} />
+          <ScheduleEditor vendor={vendor} />
+        </main>
+      )}
+    </VendorGate>
   );
 }
 

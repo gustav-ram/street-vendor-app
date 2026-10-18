@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { useNow } from "@/lib/hooks/useNow";
 import { CommunityActions, PhotoGrid, ReportDialog } from "../community/VendorCommunity";
-import { CategoryIcon, DirectionsButtons, LiveLine, PaymentBadges, PrecisionNote, Rating, VerifiedBadge } from "./bits";
+import { BadgeExplainer, CategoryIcon, DirectionsButtons, LiveLine, PaymentBadges, PrecisionNote, Rating, VerifiedBadge } from "./bits";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -133,6 +133,7 @@ function Profile({ v }: { v: VendorProfile }) {
             {v.verified && <VerifiedBadge withHint />}
             <Rating average={v.rating.average} count={v.rating.count} />
           </div>
+          {v.verified && <BadgeExplainer />}
         </div>
       </header>
 

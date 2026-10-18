@@ -1,7 +1,9 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
+  badgeNeeds,
   CATEGORY_EMOJI,
   type Category,
   type LiveInfo,
@@ -74,6 +76,26 @@ export function VerifiedBadge({ withHint = false }: { withHint?: boolean }) {
       <span aria-hidden>✔</span> {t("verified")}
       {withHint && <span className="sr-only">. {t("verifiedHint")}</span>}
     </span>
+  );
+}
+
+/** "How is this earned?": the badge's criteria, so customers know what it means. */
+export function BadgeExplainer() {
+  const { t } = useTranslation("vendor");
+  const { t: td } = useTranslation("dashboard");
+  const meta = useQuery({ queryKey: ["meta"], queryFn: api.meta, staleTime: 3_600_000 });
+  return (
+    <details className="w-full rounded-2xl bg-live/5 px-3 py-2 text-sm">
+      <summary className="cursor-pointer font-bold text-live">{t("verifiedHow")}</summary>
+      <p className="mt-1">{t("verifiedHint")}</p>
+      {meta.data && (
+        <ul className="mt-1 list-disc pl-5">
+          {badgeNeeds(meta.data.badge).map(([key, values]) => (
+            <li key={key}>{td(key, values)}</li>
+          ))}
+        </ul>
+      )}
+    </details>
   );
 }
 
