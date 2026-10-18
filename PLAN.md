@@ -2,7 +2,7 @@
 
 Approved 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
 
-**Progress:** M1 and M2 done (2026-10-17). Next: M3.
+**Progress:** M1, M2 and M3 done (2026-10-17). Next: M4.
 
 ## 1. Key decisions
 
@@ -140,6 +140,9 @@ Conventions: every primary key is a random UUIDv4 (`gen_random_uuid()`), so noth
 - Foreground only, no background location. When the app is backgrounded, heartbeats stop and the server expires the session. When the vendor comes back after expiry, the app shows "You went offline automatically" and needs a tap to go live again. If the signal drops while the app is still open, it goes live again on its own once it reconnects, with a fresh location, as long as the timer hasn't run out.
 - The Live screen keeps the phone awake (`expo-keep-awake`) with a dark, low-power layout.
 - The vendor always sees one of three states: **Live**, **Reconnecting…** (heartbeats failing, still within the grace period) or **Offline**. Customers see "Live · confirmed 3 min ago".
+- **One device at a time.** Each heartbeat names its session (`startedAt`). Once another phone or browser goes live for the same stand, the old device's heartbeats are refused (`live_elsewhere`), so a forgotten tab at home can't drag the pin away from the cart. A device never reads its location for a session it didn't start: it shows a fourth state, **Live from another device**, with "Use this device's location" (keeps the original closing time) and "Close now".
+- The website follows the same rules: browser geolocation, heartbeats only while the page is visible (switching tabs counts as leaving), and the session is remembered per tab so a reload carries on.
+- Signing out or turning on vacation mode while live closes the stand first.
 
 ### 6.3 Search
 - `POST /v1/search {location, radius, q, filters}`. The client rounds the location to 3 decimals (~100 m) and the server rounds it again. Request logs record only method, route, status and duration: no bodies, query strings or IPs.
@@ -237,4 +240,8 @@ Seeded logins (customer, live vendor, brand-new vendor, admin) use `.test` email
 - **Search ranking (M2):** live results sort by distance, except that an exact vendor-name match goes first. Every category has a base tag, so "flores" finds flower vendors who never added tags.
 - **Upcoming results** come from tomorrow posts plus the next occurrence (within 48 h) of published weekly schedules, with one entry per vendor. Vendors who are live right now are left out.
 - **Web profile route** resolves its `id` param on the server inside Suspense, which Cache Components requires for runtime params.
+- **Shared Go Live logic (M3):** the rules in §6.2 live in `packages/shared/src/live/controller.ts`, used by both the iOS app and the website. Each app only supplies location, visibility and storage. It is tested with fake timers against a fake server that follows the API's rules.
+- **Session identity (M3):** a live session is identified by its `startedAt`, and every start gets a new one. No extra column or device ID is stored.
+- **Web vendor dashboard (M3):** one page with Go Live, updates and the menu side by side, plus a separate profile page. Menu edits and sold-out toggles show at once and are then sent. The offline outbox is M5 and phone-only.
+- **`demo:live`** runs under `node --import tsx` and handles every Ctrl+C it receives (npm forwards it again), so stopping it reliably takes all demo vendors offline. It also stops driving a demo vendor once someone goes live as that vendor from a real device.
 - **iOS "Search this area"** only appears after the user touches the map. react-native-maps reports `isGesture` on Google Maps only, so the app tracks touches itself.

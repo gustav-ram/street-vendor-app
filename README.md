@@ -69,6 +69,8 @@ npm run demo:live
 
 Leave it running in its own terminal. Press Ctrl+C and the demo vendors go offline immediately. If you kill it hard, they disappear on their own within 5 minutes, which is the same rule real vendors follow.
 
+If you sign in as a demo vendor (for example `vendor@demo.test`) and go live from the dashboard, `demo:live` notices and stops driving that vendor.
+
 ### iOS app in the Simulator
 
 ```bash
@@ -126,9 +128,14 @@ API integration tests run against the `streeteats_test` database and refuse to r
 - **Location fuzzing:** the shown point stays within ~150 m of the real spot, the same input always gives the same output (so it can't be averaged out), different vendors get different points, and hysteresis at cell edges.
 - **Sweeper:** live locations are deleted when heartbeats stop or time runs out, and "tomorrow" posts are deleted after their window.
 - **Search:** offline vendors, vendors whose heartbeat expired or whose end time passed, and vendors in vacation mode never appear, even before the sweeper runs. Results never include account data. Also covered: synonyms ("LA style hot dog"), Spanish and typo matching, filters and ranking.
+- **Go Live:** approximate mode stores only the fuzzed point; closing deletes the location at once; a late heartbeat never brings a vendor back; the timer and end of day are respected; and a device whose session was taken over by another phone or browser can't move the pin.
 - **Logs:** no URLs, query strings, coordinates, search text, IPs or emails are written.
 
-The shared package tests check that every English string has a Spanish twin with the same placeholders.
+The shared package tests cover:
+
+- **Go Live on a device** (the logic the iOS app and website share), with fake timers: location is never read while the screen is hidden or for a session another device started; coming back after the grace period never restarts on its own; lost signal resumes with the original closing time; a heartbeat reply that arrives after closing doesn't put the vendor back on; turning location off mid-session closes the stand.
+- **Prices** as vendors type them ("7,50", "$7").
+- **Translations:** every English string has a Spanish twin with the same placeholders.
 
 ```bash
 npm run typecheck
@@ -142,6 +149,8 @@ npm run typecheck
 xcrun simctl location "StreetEats iPhone 17" set 34.0453,-118.2509
 ```
 
+- **Location (web):** the browser asks for permission the first time a vendor presses **I'm open**. To fake a position in Chrome, open DevTools → ⋮ → More tools → Sensors → Location.
+
 If you deny location access, the app and the website offer a built-in list of LA neighborhoods instead. That list is searched on the device, so nothing you type is sent anywhere.
 - **Bad signal:** install *Network Link Conditioner* (Xcode → Open Developer Tool → More Developer Tools → "Additional Tools for Xcode") and pick the "Very Bad Network" or "100% Loss" profile. It affects the Simulator too. The vendor app gets a built-in "Simulate no signal" switch in M5.
 
@@ -154,7 +163,24 @@ No account is needed to browse.
 3. Open **Filters** to filter by distance, category, price, payment type or language spoken (try Zapotec or Korean). Turn off **Open now** to also see vendors who plan to be somewhere later (dashed pins).
 4. Tap a pin, then **View**, for the full profile with menu, schedule, upcoming spots and reviews. **Get directions** opens Apple or Google Maps at the vendor's public point. For approximate-area vendors that point is up to ~150 m from the cart.
 
-Signing in, favorites, reviews and photos arrive in M4.
+Favorites, reviews and photos arrive in M4.
+
+## Trying it as a vendor
+
+Use `newvendor@demo.test` to try the quick start, or `vendor@demo.test` for a stand that's already set up (see [Demo logins](#demo-logins)).
+
+**On the website** (http://localhost:3100):
+
+1. **Sign in.** A new vendor goes straight to the quick start: business name, what you sell, a few items with prices and how people can pay. It takes under 2 minutes.
+2. On **My stand**, choose **Approximate area** (the default) or **Exact spot**, optionally a closing timer, and press **I'm open**. The browser asks for your location. The small map shows exactly what customers see: in approximate mode it's a nearby point, never your real one.
+3. Open http://localhost:3100 in a private window. Your stand is on the map and in search.
+4. Mark an item **Sold out**, or post an update ("Fresh mangos until 6"). Both show on your public page right away.
+5. Press **Close now**. You disappear from the map and the location is deleted. If you switch to another tab instead, you go offline on your own after 5 minutes.
+6. **My profile** has payment badges (types only, never account names or numbers), languages, the default map precision, an optional public contact (off by default) and vacation mode.
+
+**On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)).
+
+**One device at a time:** if you're live on the phone and open the dashboard on a laptop, the laptop shows **Live from another device** and never shares its own location unless you press **Use this device's location**. The phone then stops sending its location.
 
 ## Useful commands
 
