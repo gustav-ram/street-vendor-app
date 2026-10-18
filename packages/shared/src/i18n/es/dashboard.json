@@ -43,6 +43,7 @@
     "secondsAgo": "hace {{count}} s",
     "keepOpen": "Deja esta pantalla abierta mientras estés abierto. Si sales de la app o pierdes señal por más de {{minutes}} minutos, te desconectarás solo.",
     "wentOfflineAuto": "Te desconectaste automáticamente porque la app se cerró o perdió señal. Toca \"Estoy abierto\" para volver al mapa.",
+    "timerEnded": "Llegó tu hora de cierre, así que ya no estás en el mapa. Toca \"Estoy abierto\" para volver.",
     "offlinePending": "Sin señal. Desaparecerás del mapa en menos de {{minutes}} minutos, o en cuanto vuelvas a conectarte.",
     "locationNeeded": "Para aparecer en el mapa, StreetEats necesita tu ubicación mientras la app está abierta. Solo se comparte mientras estás abierto y se borra al cerrar.",
     "locationDenied": "La ubicación está apagada para StreetEats. Actívala en Configuración para aparecer en el mapa.",

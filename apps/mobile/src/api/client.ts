@@ -10,9 +10,10 @@ export class ApiRequestError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}, token?: string | null): Promise<T> {
   const headers: Record<string, string> = { 'x-client': 'mobile' };
   if (init.body) headers['content-type'] = 'application/json';
+  if (token) headers.authorization = `Bearer ${token}`;
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, { ...init, headers: { ...headers, ...(init.headers as Record<string, string>) } });

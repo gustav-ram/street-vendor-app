@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, type PressableProps, StyleSheet, Text, type ViewStyle } from 'react-native';
+import { Pressable, type PressableProps, type StyleProp, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { colors, touch, type } from '@/theme';
 
 type Variant = 'primary' | 'dark' | 'outline';
@@ -15,7 +15,7 @@ export function Button({
   label: string;
   onPress: PressableProps['onPress'];
   variant?: Variant;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   accessibilityHint?: string;
 }) {
@@ -68,4 +68,74 @@ const styles = StyleSheet.create({
   },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontSize: type.small + 1, fontWeight: '700', color: colors.ink },
+});
+
+export function Field({
+  label,
+  hint,
+  ...input
+}: { label: string; hint?: string } & React.ComponentProps<typeof TextInput>) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={fieldStyles.label}>{label}</Text>
+      <TextInput placeholderTextColor={colors.inkSoft} {...input} style={[fieldStyles.input, input.multiline && { minHeight: 96, textAlignVertical: 'top' }, input.style]} />
+      {hint ? <Text style={fieldStyles.hint}>{hint}</Text> : null}
+    </View>
+  );
+}
+
+/** Two or more big options, one selected. */
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: Array<{ value: T; label: string; hint?: string }>;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View style={{ gap: 8 }} accessibilityRole="radiogroup">
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            onPress={() => onChange(o.value)}
+            style={[fieldStyles.option, on && fieldStyles.optionOn]}
+          >
+            <Text style={[fieldStyles.optionLabel, on && { color: colors.white }]}>{on ? '● ' : '○ '}{o.label}</Text>
+            {o.hint ? <Text style={[fieldStyles.hint, on && { color: 'rgba(255,255,255,0.85)' }]}>{o.hint}</Text> : null}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+export function Notice({ text, tone = 'info' }: { text: string; tone?: 'info' | 'warn' | 'error' }) {
+  const bg = tone === 'error' ? 'rgba(180,35,24,0.12)' : tone === 'warn' ? 'rgba(245,165,36,0.25)' : colors.sand;
+  return <Text style={[fieldStyles.notice, { backgroundColor: bg }]}>{text}</Text>;
+}
+
+const fieldStyles = StyleSheet.create({
+  label: { fontSize: type.body, fontWeight: '800', color: colors.ink },
+  hint: { fontSize: type.small, color: colors.inkSoft },
+  input: {
+    minHeight: touch.min,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: type.body,
+    color: colors.ink,
+    backgroundColor: colors.white,
+  },
+  option: { borderWidth: 2, borderColor: colors.ink, borderRadius: 16, padding: 14, gap: 2, backgroundColor: colors.white },
+  optionOn: { backgroundColor: colors.ink },
+  optionLabel: { fontSize: type.body, fontWeight: '800', color: colors.ink },
+  notice: { borderRadius: 12, overflow: 'hidden', padding: 12, fontSize: type.small + 1, color: colors.ink, lineHeight: 22 },
 });

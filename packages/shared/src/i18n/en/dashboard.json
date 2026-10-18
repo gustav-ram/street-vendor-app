@@ -43,6 +43,7 @@
     "secondsAgo": "{{count}} s ago",
     "keepOpen": "Keep this screen open while you're open. If you leave the app or lose signal for more than {{minutes}} minutes, you'll go offline on your own.",
     "wentOfflineAuto": "You went offline automatically because the app was closed or lost signal. Tap \"I'm open\" to go back on the map.",
+    "timerEnded": "Your closing time arrived, so you're off the map. Tap \"I'm open\" to go back on.",
     "offlinePending": "No signal. You'll disappear from the map within {{minutes}} minutes, or as soon as you reconnect.",
     "locationNeeded": "To go live, StreetEats needs your location while the app is open. It's only shared while you're live and deleted when you close.",
     "locationDenied": "Location is off for StreetEats. Turn it on in Settings to go live.",

@@ -1,24 +1,55 @@
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { signOut, useAuth } from '@/auth/session';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ServerStatus } from '@/components/ServerStatus';
+import { Button } from '@/components/ui';
 import { colors, space, type } from '@/theme';
 
 export default function AccountScreen() {
+  const router = useRouter();
   const { t } = useTranslation();
+  const { t: ta } = useTranslation('auth');
+  const { t: td } = useTranslation('dashboard');
+  const { status, me } = useAuth();
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.brand}>{t('appName')}</Text>
+
+        {status === 'signedIn' && me ? (
+          <View style={styles.card}>
+            <Text style={styles.heading}>{ta('signedInAs')}</Text>
+            {me.displayName ? <Text style={styles.body}>{me.displayName}</Text> : null}
+            {me.role === 'vendor' ? (
+              <Button label={`🛒 ${td('openDashboard')}`} onPress={() => router.push('/dashboard')} style={{ alignSelf: 'stretch' }} />
+            ) : (
+              <Text style={styles.muted}>{ta('customerSoon')}</Text>
+            )}
+            <Button variant="outline" label={ta('signOut')} onPress={() => void signOut()} style={{ alignSelf: 'stretch' }} />
+          </View>
+        ) : (
+          <>
+            <Button variant="dark" label={ta('signIn')} onPress={() => router.push('/auth/sign-in')} />
+            <View style={[styles.card, styles.vendorCard]}>
+              <Text style={[styles.heading, { color: colors.white }]}>{t('home.vendorTitle')}</Text>
+              <Text style={styles.onChile}>{t('home.vendorBody')}</Text>
+              <Button
+                variant="outline"
+                label={ta('vendorPitch')}
+                onPress={() => router.push({ pathname: '/auth/sign-up', params: { role: 'vendor' } })}
+                style={{ alignSelf: 'stretch' }}
+              />
+            </View>
+          </>
+        )}
+
         <View style={styles.card}>
           <Text style={styles.heading}>{t('language.label')}</Text>
           <LanguageToggle />
-        </View>
-        <View style={[styles.card, styles.vendorCard]}>
-          <Text style={[styles.heading, { color: colors.white }]}>{t('home.vendorTitle')}</Text>
-          <Text style={styles.onChile}>{t('home.vendorBody')}</Text>
-          <Text style={styles.pill}>{t('home.comingSoon')}</Text>
         </View>
         <ServerStatus />
       </ScrollView>
@@ -33,6 +64,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: 20, borderWidth: 2, borderColor: colors.ink, padding: space.md, gap: space.sm, alignItems: 'flex-start' },
   vendorCard: { backgroundColor: colors.chile, borderColor: colors.chile },
   heading: { fontSize: type.heading - 2, fontWeight: '900', color: colors.ink },
+  body: { fontSize: type.body, color: colors.ink },
+  muted: { fontSize: type.small, color: colors.inkSoft },
   onChile: { color: colors.white, fontSize: type.body },
-  pill: { color: colors.white, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, overflow: 'hidden', fontWeight: '700' },
 });
