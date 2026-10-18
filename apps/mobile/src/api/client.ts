@@ -1,4 +1,4 @@
-import type { ErrorCode, SearchRequest, SearchResponse, VendorProfile } from '@streeteats/shared';
+import type { ErrorCode, MetaResponse, SearchRequest, SearchResponse, VendorProfile } from '@streeteats/shared';
 import { API_URL } from '@/config';
 
 export class ApiRequestError extends Error {
@@ -48,6 +48,7 @@ export async function request<T>(path: string, init: RequestInit = {}, token?: s
 }
 
 export const api = {
+  meta: () => request<MetaResponse>('/v1/meta'),
   // POST so the (already coarsened) location never lands in a URL.
   search: (body: SearchRequest) => request<SearchResponse>('/v1/search', { method: 'POST', body: JSON.stringify(body) }),
   vendor: (id: string) => request<VendorProfile>(`/v1/vendors/${encodeURIComponent(id)}`),

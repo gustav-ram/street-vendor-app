@@ -9,7 +9,7 @@ import { useAuth } from '@/auth/session';
 import { PhotoStrip, ReportSheet } from '@/components/community';
 import { Button } from '@/components/ui';
 import { VendorActions } from '@/components/VendorActions';
-import { CategoryIcon, DirectionsButton, LiveLine, PaymentBadges, Rating, StatusBanner, VerifiedBadge } from '@/components/vendor';
+import { BadgeExplainer, CategoryIcon, DirectionsButton, LiveLine, PaymentBadges, Rating, StatusBanner, VerifiedBadge } from '@/components/vendor';
 import { useFormat } from '@/hooks/useFormat';
 import { useNow } from '@/hooks/useNow';
 import { colors, space, type } from '@/theme';
@@ -84,6 +84,7 @@ function Profile({ v }: { v: VendorProfile }) {
           <Rating average={v.rating.average} count={v.rating.count} />
         </View>
       </View>
+      {v.verified && <BadgeExplainer />}
 
       {v.live ? (
         <View style={[styles.box, styles.liveBox]}>

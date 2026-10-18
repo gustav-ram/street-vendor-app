@@ -1,6 +1,9 @@
-import { ActionSheetIOS, Linking, Platform, StyleSheet, Text, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { ActionSheetIOS, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
+  badgeNeeds,
   CATEGORY_EMOJI,
   type Category,
   type LiveInfo,
@@ -57,6 +60,34 @@ export function VerifiedBadge() {
     <Text style={styles.verified} accessibilityHint={t('verifiedHint')}>
       ✔ {t('verified')}
     </Text>
+  );
+}
+
+/** "How is this earned?": the badge's criteria, so customers know what it means. */
+export function BadgeExplainer() {
+  const { t } = useTranslation('vendor');
+  const { t: td } = useTranslation('dashboard');
+  const [open, setOpen] = useState(false);
+  const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 3_600_000, enabled: open });
+  return (
+    <View style={styles.explainer}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} hitSlop={8}>
+        <Text style={styles.explainerToggle}>
+          {open ? '▾' : '▸'} {t('verifiedHow')}
+        </Text>
+      </Pressable>
+      {open && (
+        <View style={{ gap: 4 }}>
+          <Text style={styles.explainerText}>{t('verifiedHint')}</Text>
+          {meta.data &&
+            badgeNeeds(meta.data.badge).map(([key, values]) => (
+              <Text key={key} style={styles.explainerText}>
+                • {td(key, values)}
+              </Text>
+            ))}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -126,6 +157,9 @@ export function DirectionsButton({ vendorId, location }: { vendorId: string; loc
 }
 
 const styles = StyleSheet.create({
+  explainer: { backgroundColor: 'rgba(21,127,60,0.07)', borderRadius: 12, padding: 10, gap: 6 },
+  explainerToggle: { color: colors.live, fontWeight: '800', fontSize: type.small + 1 },
+  explainerText: { color: colors.ink, fontSize: type.small },
   icon: { backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   badge: {

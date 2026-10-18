@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { CATEGORIES, CATEGORY_EMOJI, LANGUAGES, PAYMENT_METHODS, RADIUS_OPTIONS_M } from '@streeteats/shared';
@@ -33,18 +33,6 @@ export default function FiltersScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-        <View style={styles.openNow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>{t('openNow')}</Text>
-            <Text style={styles.muted}>{t('openNowHint')}</Text>
-          </View>
-          <Switch
-            value={draft.openNow}
-            onValueChange={(v) => setDraft({ ...draft, openNow: v })}
-            trackColor={{ true: colors.live }}
-            accessibilityLabel={t('openNow')}
-          />
-        </View>
         <Section title={t('radius')}>
           {RADIUS_OPTIONS_M.map((m) => (
             <Chip key={m} on={draft.radiusM === m} onPress={() => setDraft({ ...draft, radiusM: m })}>
@@ -99,7 +87,6 @@ export default function FiltersScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.paper },
   content: { padding: space.md, gap: space.lg },
-  openNow: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.white, borderRadius: 16, padding: space.md },
   sectionTitle: { fontSize: type.body, fontWeight: '900', color: colors.ink },
   muted: { color: colors.inkSoft, fontSize: type.small },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

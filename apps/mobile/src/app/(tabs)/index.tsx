@@ -6,11 +6,15 @@ import { FlatList, Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View
 import MapView, { Circle, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { CATEGORY_EMOJI, type LatLng, searchPlaces } from '@streeteats/shared';
+import { CATEGORY_EMOJI, type LatLng, searchPlaces, type UpcomingResult } from '@streeteats/shared';
 import { api } from '@/api/client';
+import { communityApi } from '@/api/community';
+import { useAuth } from '@/auth/session';
 import { SelectedCard } from '@/components/SelectedCard';
 import { Button } from '@/components/ui';
 import { VendorRow } from '@/components/VendorRow';
+import { useDayName } from '@/hooks/useDayName';
+import { useFormat } from '@/hooks/useFormat';
 import { activeFilterCount, exploreStore, useExplore } from '@/state/explore';
 import { colors, space, touch, type } from '@/theme';
 
@@ -31,7 +35,10 @@ export default function ExploreScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation('search');
   const { t: tc } = useTranslation();
-  const { origin, filters } = useExplore();
+  const { origin, filters, mode } = useExplore();
+  const { status } = useAuth();
+  const dayName = useDayName();
+  const f = useFormat();
   const [input, setInput] = useState('');
   const [q, setQ] = useState('');
   const [view, setView] = useState<'map' | 'list'>('map');
@@ -74,7 +81,7 @@ export default function ExploreScreen() {
   }, [origin]);
 
   const search = useQuery({
-    queryKey: ['search', origin.lat, origin.lng, q, filters],
+    queryKey: ['search', origin.lat, origin.lng, q, filters, mode],
     queryFn: () =>
       api.search({
         location: { lat: origin.lat, lng: origin.lng },
@@ -86,29 +93,31 @@ export default function ExploreScreen() {
           paymentMethods: filters.paymentMethods,
           languages: filters.languages,
         },
-        include: filters.openNow ? ['live'] : ['live', 'upcoming'],
+        include: [mode === 'now' ? 'live' : 'upcoming'],
       }),
     placeholderData: keepPreviousData,
   });
 
   const live = useMemo(() => search.data?.live ?? [], [search.data]);
   const upcoming = useMemo(() => search.data?.upcoming ?? [], [search.data]);
-  const results = useMemo(() => [...live, ...(filters.openNow ? [] : upcoming)], [live, upcoming, filters.openNow]);
+  const results = useMemo(() => (mode === 'now' ? live : upcoming), [live, upcoming, mode]);
+  // Where saved vendors will be next, wherever that is (Upcoming tab, signed in).
+  const favorites = useQuery({ queryKey: ['favorites'], queryFn: communityApi.favorites, enabled: status === 'signedIn' && mode === 'upcoming' });
+  const plannedFavorites = (favorites.data?.favorites ?? []).filter((x) => x.upcoming.length > 0);
   const selected = results.find((v) => v.id === selectedId) ?? null;
   const filterCount = activeFilterCount(filters);
 
   const pins = useMemo(
     () => [
-      ...live.map((v) => ({ id: v.id, name: v.displayName, emoji: CATEGORY_EMOJI[v.categories[0] ?? 'other'], loc: v.live.location, upcoming: false })),
-      ...(filters.openNow
-        ? []
+      ...(mode === 'now'
+        ? live.map((v) => ({ id: v.id, name: v.displayName, emoji: CATEGORY_EMOJI[v.categories[0] ?? 'other'], loc: v.live.location, upcoming: false }))
         : upcoming.flatMap((v) =>
             v.spot.location
               ? [{ id: v.id, name: v.displayName, emoji: CATEGORY_EMOJI[v.categories[0] ?? 'other'], loc: v.spot.location, upcoming: true }]
               : [],
           )),
     ],
-    [live, upcoming, filters.openNow],
+    [live, upcoming, mode],
   );
 
   const where =
@@ -116,15 +125,39 @@ export default function ExploreScreen() {
       ? t('location.nearYou')
       : t('location.near', { place: origin.label.kind === 'place' ? origin.label.name : t('location.mapCenter') });
 
-  const emptyState = (
-    <View style={styles.empty}>
-      <Text style={styles.emptyTitle}>{t('noResults')}</Text>
-      <Text style={styles.muted}>{t('noResultsHint')}</Text>
-      {filters.openNow && (
-        <Button variant="outline" label={t('showUpcoming')} onPress={() => exploreStore.setFilters({ ...filters, openNow: false })} />
-      )}
-    </View>
-  );
+  const emptyState =
+    mode === 'now' ? (
+      <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>{t('noResults')}</Text>
+        <Text style={styles.muted}>{t('noResultsHint')}</Text>
+        <Button variant="outline" label={t('showUpcoming')} onPress={() => exploreStore.setMode('upcoming')} />
+      </View>
+    ) : (
+      <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>{t('upcomingEmpty')}</Text>
+        <Text style={styles.muted}>{t('upcomingHint')}</Text>
+      </View>
+    );
+  const countText = mode === 'now' ? t('results', { count: live.length }) : t('upcomingResults', { count: upcoming.length });
+
+  // Upcoming list: favorites first, then grouped by day (results come sorted by start time).
+  type Row = { kind: 'header'; key: string; label: string } | { kind: 'vendor'; key: string; vendor: (typeof results)[number] } | { kind: 'fav'; key: string; fav: (typeof plannedFavorites)[number] };
+  const rows: Row[] = (() => {
+    if (mode === 'now') return live.map((v) => ({ kind: 'vendor' as const, key: `l-${v.id}`, vendor: v }));
+    const out: Row[] = [];
+    if (plannedFavorites.length) {
+      out.push({ kind: 'header', key: 'h-fav', label: `♥ ${t('fromFavorites')}` });
+      plannedFavorites.forEach((fav) => out.push({ kind: 'fav', key: `f-${fav.vendor.id}`, fav }));
+    }
+    let last = '';
+    for (const v of upcoming as UpcomingResult[]) {
+      const label = dayName(v.spot.startsAt);
+      if (label !== last) out.push({ kind: 'header', key: `h-${label}`, label });
+      last = label;
+      out.push({ kind: 'vendor', key: `u-${v.id}`, vendor: v });
+    }
+    return out;
+  })();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -157,6 +190,25 @@ export default function ExploreScreen() {
               {filterCount ? t('filtersActive', { count: filterCount }) : t('filters')}
             </Text>
           </Pressable>
+        </View>
+        <View style={styles.modeRow} accessibilityRole="tablist">
+          {(['now', 'upcoming'] as const).map((m) => (
+            <Pressable
+              key={m}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: mode === m }}
+              onPress={() => {
+                setSelectedId(null);
+                exploreStore.setMode(m);
+              }}
+              style={[styles.modeItem, mode === m && (m === 'now' ? styles.modeNow : styles.modeUpcoming)]}
+            >
+              <Text style={[styles.modeText, mode === m && { color: colors.white }]}>
+                {m === 'now' ? '● ' : '📅 '}
+                {t(`tabs.${m}`)}
+              </Text>
+            </Pressable>
+          ))}
         </View>
         <View style={styles.locRow}>
           <Text style={styles.where} numberOfLines={1}>
@@ -247,7 +299,7 @@ export default function ExploreScreen() {
           </MapView>
           <View style={styles.mapTop} pointerEvents="box-none">
             <Text style={styles.countPill}>
-              {search.isPending ? tc('status.loading') : search.isError ? t('error') : t('results', { count: live.length })}
+              {search.isPending ? tc('status.loading') : search.isError ? t('error') : countText}
             </Text>
             {movedTo && (
               <Button variant="dark" label={`🔍 ${t('location.searchThisArea')}`} onPress={() => exploreStore.setOrigin(movedTo, { kind: 'area' })} />
@@ -258,10 +310,28 @@ export default function ExploreScreen() {
         </View>
       ) : (
         <FlatList
-          data={results}
-          keyExtractor={(v) => ('live' in v ? `l-${v.id}` : `u-${v.id}`)}
-          renderItem={({ item }) => <VendorRow vendor={item} />}
-          ListHeaderComponent={<Text style={styles.listHeader}>{t('results', { count: live.length })}</Text>}
+          data={rows}
+          keyExtractor={(r) => r.key}
+          renderItem={({ item }) =>
+            item.kind === 'header' ? (
+              <Text style={styles.dayHeader}>{item.label}</Text>
+            ) : item.kind === 'fav' ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/vendor/[id]', params: { id: item.fav.vendor.id } })}
+                style={({ pressed }) => [styles.favRow, pressed && { backgroundColor: colors.sand }]}
+              >
+                <Text style={styles.favName}>{item.fav.vendor.displayName}</Text>
+                <Text style={styles.muted}>
+                  {dayName(item.fav.upcoming[0]!.startsAt)} · {f.time(item.fav.upcoming[0]!.startsAt)} – {f.time(item.fav.upcoming[0]!.endsAt)}
+                  {item.fav.upcoming[0]!.placeLabel ? ` · ${item.fav.upcoming[0]!.placeLabel}` : ''}
+                </Text>
+              </Pressable>
+            ) : (
+              <VendorRow vendor={item.vendor} />
+            )
+          }
+          ListHeaderComponent={<Text style={styles.listHeader}>{countText}</Text>}
           ListEmptyComponent={search.isPending ? <Text style={[styles.muted, { padding: space.md }]}>{tc('status.loading')}</Text> : emptyState}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
@@ -378,6 +448,14 @@ const styles = StyleSheet.create({
   pinSelected: { borderColor: colors.ink, transform: [{ scale: 1.2 }] },
   pinEmoji: { fontSize: 22 },
   listHeader: { fontSize: type.body, fontWeight: '900', color: colors.ink, padding: space.md, paddingBottom: space.xs },
+  dayHeader: { fontSize: type.body - 1, fontWeight: '900', color: colors.ink, backgroundColor: 'rgba(232,220,200,0.6)', paddingHorizontal: space.md, paddingVertical: 8 },
+  favRow: { paddingHorizontal: space.md, paddingVertical: 10, gap: 2, borderBottomWidth: 1, borderBottomColor: colors.sand, backgroundColor: 'rgba(245,165,36,0.1)' },
+  favName: { fontSize: type.body, fontWeight: '800', color: colors.ink },
+  modeRow: { flexDirection: 'row', borderWidth: 2, borderColor: colors.ink, borderRadius: 999, padding: 2 },
+  modeItem: { flex: 1, minHeight: touch.min - 4, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  modeNow: { backgroundColor: colors.live },
+  modeUpcoming: { backgroundColor: colors.ink },
+  modeText: { fontWeight: '900', fontSize: type.small + 1, color: colors.ink },
   empty: { padding: space.md, gap: space.sm },
   emptyOverlay: { position: 'absolute', left: space.sm, right: space.sm, bottom: space.sm, backgroundColor: colors.white, borderRadius: 20, borderWidth: 2, borderColor: colors.ink },
   emptyTitle: { fontSize: type.body, fontWeight: '800', color: colors.ink },

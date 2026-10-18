@@ -15,27 +15,30 @@ export interface Origin extends LatLng {
 }
 
 export interface ExploreFilters extends Required<SearchFilters> {
-  openNow: boolean;
   radiusM: number;
 }
+
+/** The two tabs on the map: who's open right now, and who's coming (tomorrow posts, schedules). */
+export type ExploreMode = 'now' | 'upcoming';
 
 export const DEFAULT_FILTERS: ExploreFilters = {
   categories: [],
   priceLevels: [],
   paymentMethods: [],
   languages: [],
-  openNow: true,
   radiusM: DEFAULT_RADIUS_M,
 };
 
 interface ExploreState {
   origin: Origin;
   filters: ExploreFilters;
+  mode: ExploreMode;
 }
 
 let state: ExploreState = {
   origin: { lat: DEFAULT_PLACE.lat, lng: DEFAULT_PLACE.lng, label: { kind: 'place', name: DEFAULT_PLACE.name } },
   filters: DEFAULT_FILTERS,
+  mode: 'now',
 };
 const listeners = new Set<() => void>();
 
@@ -48,6 +51,7 @@ export const exploreStore = {
   /** The location is coarsened to ~100 m before it's kept anywhere. */
   setOrigin: (p: LatLng, label: OriginLabel) => set({ origin: { ...coarsenCustomerLocation(p), label } }),
   setFilters: (filters: ExploreFilters) => set({ filters }),
+  setMode: (mode: ExploreMode) => set({ mode }),
 };
 
 export function useExplore(): ExploreState {
@@ -66,7 +70,6 @@ export function activeFilterCount(f: ExploreFilters) {
     f.priceLevels.length +
     f.paymentMethods.length +
     f.languages.length +
-    (f.openNow !== DEFAULT_FILTERS.openNow ? 1 : 0) +
     (f.radiusM !== DEFAULT_FILTERS.radiusM ? 1 : 0)
   );
 }
