@@ -1,9 +1,11 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type {
   AuthResponse,
   GoLiveInput,
+  HeartbeatInput,
   LiveStatus,
   Me,
   MenuItemInput,
@@ -68,6 +70,9 @@ async function authed<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
+/** React Query key for the signed-in vendor's own business. */
+export const MY_VENDOR_KEY = ["myVendor"] as const;
+
 const json = (method: string, body?: unknown): RequestInit => ({ method, body: body === undefined ? undefined : JSON.stringify(body) });
 
 export const vendorApi = {
@@ -78,7 +83,7 @@ export const vendorApi = {
     status: () => authed<LiveStatus>("/v1/vendor/live"),
     // Exact coordinates go only to our API, which fuzzes them before storing.
     start: (input: GoLiveInput) => authed<LiveStatus>("/v1/vendor/live", json("POST", input)),
-    heartbeat: (location: { lat: number; lng: number }) => authed<LiveStatus>("/v1/vendor/live/heartbeat", json("POST", { location })),
+    heartbeat: (input: HeartbeatInput) => authed<LiveStatus>("/v1/vendor/live/heartbeat", json("POST", input)),
     end: () => authed<LiveStatus>("/v1/vendor/live", json("DELETE")),
   },
   menu: {
@@ -104,6 +109,7 @@ interface AuthValue {
 const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [me, setMe] = useState<Me | null>(null);
   const [status, setStatus] = useState<AuthValue["status"]>("loading");
 
@@ -114,12 +120,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const adopt = useCallback((r: AuthResponse) => {
-    accessToken = r.accessToken;
-    setMe(r.user);
-    setStatus("signedIn");
-    return r.user;
-  }, []);
+  const adopt = useCallback(
+    (r: AuthResponse) => {
+      queryClient.removeQueries({ queryKey: MY_VENDOR_KEY });
+      accessToken = r.accessToken;
+      setMe(r.user);
+      setStatus("signedIn");
+      return r.user;
+    },
+    [queryClient],
+  );
 
   const value = useMemo<AuthValue>(
     () => ({
@@ -131,11 +141,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         await raw("/v1/auth/logout", { method: "POST" }).catch(() => {});
         accessToken = null;
+        queryClient.removeQueries({ queryKey: MY_VENDOR_KEY });
         setMe(null);
         setStatus("signedOut");
       },
     }),
-    [status, me, adopt],
+    [status, me, adopt, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

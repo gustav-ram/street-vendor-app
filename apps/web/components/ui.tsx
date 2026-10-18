@@ -8,11 +8,13 @@ export const buttonClass = {
   outline: "inline-flex min-h-12 items-center justify-center rounded-full border-2 border-ink bg-white px-6 text-lg font-bold hover:bg-sand disabled:opacity-50",
 };
 
+export const inputClass = "min-h-12 rounded-xl border-2 border-ink bg-white px-3 text-lg placeholder:text-ink-soft";
+
 export function Field({ label, hint, ...input }: { label: string; hint?: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="flex flex-col gap-1.5">
       <span className="text-lg font-extrabold">{label}</span>
-      <input {...input} className="min-h-12 rounded-xl border-2 border-ink bg-white px-3 text-lg placeholder:text-ink-soft" />
+      <input {...input} className={inputClass} />
       {hint && <span className="text-sm text-ink-soft">{hint}</span>}
     </label>
   );
@@ -76,6 +78,50 @@ export function Notice({ tone = "info", children }: { tone?: "info" | "warn" | "
     <p role={tone === "error" ? "alert" : "status"} className={`rounded-xl px-4 py-3 ${bg}`}>
       {children}
     </p>
+  );
+}
+
+/** A big on/off switch with its label (role="switch", so screen readers announce on/off). */
+export function Switch({
+  checked,
+  onChange,
+  label,
+  hint,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (on: boolean) => void;
+  label: ReactNode;
+  hint?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <label className={`flex items-center gap-4 rounded-2xl bg-white p-4 ${disabled ? "opacity-50" : "cursor-pointer"}`}>
+      <span className="flex flex-1 flex-col gap-0.5">
+        <span className="text-lg font-extrabold">{label}</span>
+        {hint && <span className="text-ink-soft">{hint}</span>}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative h-9 w-16 shrink-0 rounded-full border-2 border-ink transition-colors ${checked ? "bg-live" : "bg-sand"}`}
+      >
+        <span className={`absolute top-0.5 size-7 rounded-full border-2 border-ink bg-white transition-all ${checked ? "left-7" : "left-0.5"}`} />
+      </button>
+    </label>
+  );
+}
+
+/** A dashboard card with a heading. */
+export function Panel({ title, children, className = "" }: { title?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <section className={`flex flex-col gap-4 rounded-3xl border-2 border-ink/10 bg-white/70 p-5 ${className}`}>
+      {title && <h2 className="text-2xl font-black">{title}</h2>}
+      {children}
+    </section>
   );
 }
 

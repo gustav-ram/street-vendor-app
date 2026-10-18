@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { goOffline, isLiveHere } from "@/lib/live";
 
 export function AccountLinks({ lang }: { lang: string }) {
   const { t } = useTranslation("auth");
@@ -19,7 +20,15 @@ export function AccountLinks({ lang }: { lang: string }) {
             {td("title")}
           </Link>
         )}
-        <button type="button" onClick={() => void signOut()} className="underline-offset-4 hover:underline">
+        <button
+          type="button"
+          onClick={async () => {
+            // Signing out closes the stand first, so the location isn't left up for the grace period.
+            if (isLiveHere()) await goOffline();
+            await signOut();
+          }}
+          className="underline-offset-4 hover:underline"
+        >
           {t("signOut")}
         </button>
       </nav>
