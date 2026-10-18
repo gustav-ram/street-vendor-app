@@ -4,12 +4,11 @@ import { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { LIMITS, type MyMenuItem, type MyVendor } from '@streeteats/shared';
+import { centsToInput, LIMITS, type MyMenuItem, type MyVendor, parsePriceToCents } from '@streeteats/shared';
 import { vendorApi } from '@/api/vendor';
 import { Button, Field, Notice } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
 import { MY_VENDOR_KEY, useMyVendor } from '@/hooks/useMyVendor';
-import { centsToInput, parsePriceToCents } from '@/lib/money';
 import { colors, space, touch, type } from '@/theme';
 
 /** Menu with one-tap "sold out". Edits are applied locally first, then sent. */

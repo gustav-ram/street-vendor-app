@@ -4,12 +4,11 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { type Category, CATEGORIES, CATEGORY_EMOJI, LIMITS, PAYMENT_METHODS, type PaymentMethod } from '@streeteats/shared';
+import { type Category, CATEGORIES, CATEGORY_EMOJI, LIMITS, PAYMENT_METHODS, type PaymentMethod, parsePriceToCents } from '@streeteats/shared';
 import { ApiRequestError } from '@/api/client';
 import { vendorApi } from '@/api/vendor';
 import { Button, Chip, Field, Notice } from '@/components/ui';
 import { useSetMyVendor } from '@/hooks/useMyVendor';
-import { parsePriceToCents } from '@/lib/money';
 import { colors, space, touch, type } from '@/theme';
 
 interface Row {
