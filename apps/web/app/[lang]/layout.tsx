@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { UI_LOCALES } from "@streeteats/shared";
+import { AccountLinks } from "@/components/AccountLinks";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Providers } from "@/components/Providers";
 import { isLocale } from "@/lib/i18n/locale";
@@ -31,7 +32,10 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
             <a href={`/${lang}`} className="text-2xl font-black tracking-tight text-chile">
               {t("appName")}
             </a>
-            <LanguageSwitcher lang={lang} />
+            <div className="flex items-center gap-3">
+              <AccountLinks lang={lang} />
+              <LanguageSwitcher lang={lang} />
+            </div>
           </header>
           {children}
         </Providers>

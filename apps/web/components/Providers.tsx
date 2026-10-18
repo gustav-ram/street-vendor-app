@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import type { UiLocale } from "@streeteats/shared";
+import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n/client";
 
 export function Providers({ lang, children }: { lang: UiLocale; children: ReactNode }) {
@@ -11,7 +12,9 @@ export function Providers({ lang, children }: { lang: UiLocale; children: ReactN
   );
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider lang={lang}>{children}</I18nProvider>
+      <I18nProvider lang={lang}>
+        <AuthProvider>{children}</AuthProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
