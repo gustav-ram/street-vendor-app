@@ -2,7 +2,7 @@
 
 Approved 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
 
-**Progress:** M1 done (2026-10-17). Next: M2.
+**Progress:** M1 and M2 done (2026-10-17). Next: M3.
 
 ## 1. Key decisions
 
@@ -234,3 +234,7 @@ Seeded logins (customer, live vendor, brand-new vendor, admin) use `.test` email
 - **Q1 (Docker runtime):** Colima, installed with Homebrew (2026-10-17).
 - **Web i18n:** pages live under `/en` and `/es` (Next's recommended pattern). `proxy.ts` picks the language from a remembered choice or Accept-Language.
 - **Mobile language:** follows the phone's settings, with a manual override saved in `expo-sqlite/kv-store`.
+- **Search ranking (M2):** live results sort by distance, except that an exact vendor-name match goes first. Every category has a base tag, so "flores" finds flower vendors who never added tags.
+- **Upcoming results** come from tomorrow posts plus the next occurrence (within 48 h) of published weekly schedules, with one entry per vendor. Vendors who are live right now are left out.
+- **Web profile route** resolves its `id` param on the server inside Suspense, which Cache Components requires for runtime params.
+- **iOS "Search this area"** only appears after the user touches the map. react-native-maps reports `isGesture` on Google Maps only, so the app tracks touches itself.

@@ -9,7 +9,7 @@ A "Yelp for street vendors": customers find nearby open hot dog carts, taco stan
 | iOS app (Expo, runs in Expo Go) | `apps/mobile` | Metro on port 8090 |
 | Shared types, schemas, EN/ES strings | `packages/shared` | |
 
-> **Status:** Milestone 1 (foundation) is done: database, migrations, seed data, auth API, i18n, and bilingual web/mobile shells. The map, search and vendor tools arrive in M2–M6 ([PLAN.md §8](PLAN.md)).
+> **Status:** M1 (foundation) and M2 (customer map, search, filters, vendor profiles on web and iOS) are done. Vendor tools, photos, reviews, offline mode and launch tools arrive in M3–M6 ([PLAN.md §8](PLAN.md)).
 
 ## Prerequisites
 
@@ -58,6 +58,16 @@ npm run dev:web
 ```
 
 Open http://localhost:3100. You're redirected to `/en` or `/es` based on your browser language; the switcher in the header changes it, and the choice is remembered.
+
+### Put demo vendors on the map
+
+Live vendors only appear while their app is sending heartbeats. To keep 20 of the 26 seeded vendors live (the other 6 show up only under "coming later"):
+
+```bash
+npm run demo:live
+```
+
+Leave it running in its own terminal. Press Ctrl+C and the demo vendors go offline immediately. If you kill it hard, they disappear on their own within 5 minutes, which is the same rule real vendors follow.
 
 ### iOS app in the Simulator
 
@@ -115,7 +125,8 @@ API integration tests run against the `streeteats_test` database and refuse to r
 - **Auth:** refresh-token rotation and reuse detection, PIN lockout, cookie and CSRF rules, and confirming email and phone are never returned.
 - **Location fuzzing:** the shown point stays within ~150 m of the real spot, the same input always gives the same output (so it can't be averaged out), different vendors get different points, and hysteresis at cell edges.
 - **Sweeper:** live locations are deleted when heartbeats stop or time runs out, and "tomorrow" posts are deleted after their window.
-- **Logs:** no URLs, query strings, coordinates, IPs or emails are written.
+- **Search:** offline vendors, vendors whose heartbeat expired or whose end time passed, and vendors in vacation mode never appear, even before the sweeper runs. Results never include account data. Also covered: synonyms ("LA style hot dog"), Spanish and typo matching, filters and ranking.
+- **Logs:** no URLs, query strings, coordinates, search text, IPs or emails are written.
 
 The shared package tests check that every English string has a Spanish twin with the same placeholders.
 
@@ -125,8 +136,25 @@ npm run typecheck
 
 ## Simulating location and poor connectivity
 
-- **Location (Simulator):** Features → Location → Custom Location…, then enter a point in LA (e.g. 34.0430, -118.2673). The map arrives in M2.
+- **Location (Simulator):** Features → Location → Custom Location…, then enter a point in LA, e.g. 34.0453, -118.2509 (Downtown). Or from a terminal:
+
+```bash
+xcrun simctl location "StreetEats iPhone 17" set 34.0453,-118.2509
+```
+
+If you deny location access, the app and the website offer a built-in list of LA neighborhoods instead. That list is searched on the device, so nothing you type is sent anywhere.
 - **Bad signal:** install *Network Link Conditioner* (Xcode → Open Developer Tool → More Developer Tools → "Additional Tools for Xcode") and pick the "Very Bad Network" or "100% Loss" profile. It affects the Simulator too. The vendor app gets a built-in "Simulate no signal" switch in M5.
+
+## Trying it as a customer
+
+No account is needed to browse.
+
+1. Start the API, web and `npm run demo:live`.
+2. Search **LA style hot dog**. The synonym system finds the bacon-wrapped, Danger Dog and Sonoran dog carts, and the line under the search bar shows what the query was understood as. Spanish works too: try **perros calientes**, **flores** or **elotes**. So do typos: try **tamals**.
+3. Open **Filters** to filter by distance, category, price, payment type or language spoken (try Zapotec or Korean). Turn off **Open now** to also see vendors who plan to be somewhere later (dashed pins).
+4. Tap a pin, then **View**, for the full profile with menu, schedule, upcoming spots and reviews. **Get directions** opens Apple or Google Maps at the vendor's public point. For approximate-area vendors that point is up to ~150 m from the cart.
+
+Signing in, favorites, reviews and photos arrive in M4.
 
 ## Useful commands
 
@@ -136,6 +164,8 @@ npm run typecheck
 | `npm run db:reset` | Delete the database volume and re-run migrations |
 | `npm run db:generate` | Generate a SQL migration after editing `apps/api/src/db/schema.ts` |
 | `npm run seed` / `npm run seed:clear` | Load / remove demo data |
+| `npm run seed -- -- --tags-only` | Reload tags and search synonyms only, keeping demo data |
+| `npm run demo:live` | Keep demo vendors live (Ctrl+C takes them offline) |
 | `colima stop` | Stop the Docker VM when you're done |
 
 ## Ports
