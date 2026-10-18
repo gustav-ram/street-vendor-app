@@ -2,7 +2,7 @@
 
 Approved 2026-10-17 · Source brief: [docs/BRIEF.md](docs/BRIEF.md)
 
-**Progress:** M1, M2 and M3 done (2026-10-17). Next: M4.
+**Progress:** M1, M2 and M3 done (2026-10-17); M4 done (2026-10-18). Next: M5.
 
 ## 1. Key decisions
 
@@ -163,6 +163,7 @@ Conventions: every primary key is a random UUIDv4 (`gen_random_uuid()`), so noth
 ### 6.5 Photos
 - Accept JPEG, PNG or WebP up to 10 MB. The type is checked from the file contents, and a pixel limit guards against decompression bombs. Images are auto-rotated, then re-encoded to WebP at 1600 px plus a 400 px thumbnail. sharp drops all metadata (EXIF, GPS, XMP, ICC).
 - Customer photos start as pending; vendor photos are approved automatically. The upload screen warns against faces and license plates. Automatic blurring is deferred.
+- Files are served at `/media/:key` (random keys) only while the photo is approved, not hidden by the vendor, and the vendor isn't in vacation mode, so taking one down works at once. Moderators, the uploader and the vendor (for hidden customer photos) see non-public photos through an authenticated endpoint. Rejected or upheld-report photos are deleted with their files.
 
 ### 6.6 "Community Verified" badge
 Default criteria (configurable in env, shown in the app with progress bars and a "How do I earn this?" explainer):
@@ -244,4 +245,11 @@ Seeded logins (customer, live vendor, brand-new vendor, admin) use `.test` email
 - **Session identity (M3):** a live session is identified by its `startedAt`, and every start gets a new one. No extra column or device ID is stored.
 - **Web vendor dashboard (M3):** one page with Go Live, updates and the menu side by side, plus a separate profile page. Menu edits and sold-out toggles show at once and are then sent. The offline outbox is M5 and phone-only.
 - **`demo:live`** runs under `node --import tsx` and handles every Ctrl+C it receives (npm forwards it again), so stopping it reliably takes all demo vendors offline. It also stops driving a demo vendor once someone goes live as that vendor from a real device.
+- **Photos (M4):** uploads are resumable chunks (create, `PATCH` with `Upload-Offset`, `HEAD` to resume), shared by both apps (`packages/shared/src/upload/client.ts`). The first chunk must look like an image. React Native sends sliced Blobs with an empty Content-Type, so the upload routes take any body as raw bytes. Seeded vendors get placeholder photos made by the same pipeline.
+- **Reviews (M4):** customers only, one per vendor. A small text screen (links, emails, phone numbers, a short list of slurs, whole words only so "spicy" passes) holds a review for moderation. Vendors reply publicly. Rejected reviews stay visible only to their author.
+- **Blocks (M4):** a vendor blocks the author of a review or customer photo, never seeing who it is: blocks are listed by display name with an opaque handle (an HMAC), not an account id. Blocking stops new reviews, photos and confirmations, but doesn't hide reviews already written, so it can't be used to bury criticism. `PUT /blocks/:userId` from §7 became `POST /vendor/blocks` for this reason.
+- **"Still here?" (M4):** the device rounds the customer's location to ~10 m and the server only compares it with the public point in memory. Repeats are found by hashing under the current and previous pepper, so a pepper rotation can't be used to double-count. The per-account daily cap is in memory. The vendor page shows the last customer confirmation separately from the vendor's own heartbeat.
+- **Viewer endpoint (M4):** `GET /vendors/:id/viewer` returns the signed-in person's favorite, review and "confirmed today" state for a page, so the public profile stays cacheable and identical for everyone. The profile includes the 10 latest reviews and up to 30 photos of each kind; paginated `GET /vendors/:id/reviews|photos` are deferred until a vendor needs more.
+- **Demo accounts** are created a month old so the demo customer can try "Still here?" (new accounts wait a day).
+- **Hermes** (React Native) has no `Intl.RelativeTimeFormat`, so relative times come from the translation files.
 - **iOS "Search this area"** only appears after the user touches the map. react-native-maps reports `isGesture` on Google Maps only, so the app tracks touches itself.

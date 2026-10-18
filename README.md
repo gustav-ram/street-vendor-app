@@ -99,10 +99,10 @@ All demo accounts use the password **`streeteats-demo`**.
 
 | Email | Role | What it's for |
 |---|---|---|
-| `customer@demo.test` | Customer | Browsing, favorites, reviews |
+| `customer@demo.test` | Customer | Favorites, reviews, photos, "Still here?" (the account is a month old, so it can confirm vendors) |
 | `vendor@demo.test` | Vendor | Owns "Danger Dogs de la Esquina", fully set up |
 | `newvendor@demo.test` | Vendor | No business yet, for trying the quick start |
-| `admin@demo.test` | Admin | Moderation, reports, invite codes |
+| `admin@demo.test` | Admin | Moderation queue and reports at http://localhost:3100/en/admin |
 
 All demo data (accounts and everything they own) is flagged as demo and can be removed before real vendors join. Tags and search synonyms are kept.
 
@@ -131,9 +131,14 @@ API integration tests run against the `streeteats_test` database and refuse to r
 - **Go Live:** approximate mode stores only the fuzzed point; closing deletes the location at once; a late heartbeat never brings a vendor back; the timer and end of day are respected; and a device whose session was taken over by another phone or browser can't move the pin.
 - **Logs:** no URLs, query strings, coordinates, search text, IPs or emails are written.
 
+- **Photos:** EXIF and GPS are stripped (the test uploads a rotated phone photo with GPS coordinates and checks every served file); photos are kept upright; non-images are refused on the first chunk; huge-canvas "decompression bombs" are refused; uploads resume after a dropped connection and are swept after 24 h; customer photos stay private until approved; hidden and vacation-mode photos stop loading; rejected photos are deleted with their files.
+- **"Still here?":** stores no location or identity; requires being near the public point (~400 m approximate, ~200 m exact), a live vendor and an account at least a day old; refuses vendors and blocked people; one per day per person, only one per week counts; a per-account daily cap; hashes change with each 30-day pepper and old peppers and rows are deleted.
+- **Reviews, favorites, reports:** one review per customer, links/phones/slurs held for moderation, vendor replies, blocking without revealing who; favorite counts; reports never show the reporter, and upholding one takes the content down; moderation is for admins only.
+
 The shared package tests cover:
 
 - **Go Live on a device** (the logic the iOS app and website share), with fake timers: location is never read while the screen is hidden or for a session another device started; coming back after the grace period never restarts on its own; lost signal resumes with the original closing time; a heartbeat reply that arrives after closing doesn't put the vendor back on; turning location off mid-session closes the stand.
+- **Resumable uploads:** every byte arrives exactly once after a dropped request or a lost reply, with backoff, and errors that retrying can't fix aren't retried.
 - **Prices** as vendors type them ("7,50", "$7").
 - **Translations:** every English string has a Spanish twin with the same placeholders.
 
@@ -151,6 +156,9 @@ xcrun simctl location "StreetEats iPhone 17" set 34.0453,-118.2509
 
 - **Location (web):** the browser asks for permission the first time a vendor presses **I'm open**. To fake a position in Chrome, open DevTools → ⋮ → More tools → Sensors → Location.
 
+- **"Still here?" on iPhone:** move the Simulator next to a live vendor's pin (the vendor page's map shows it), e.g. `xcrun simctl location "StreetEats iPhone 17" set 34.0399,-118.2509`.
+- **A photo with GPS data:** `xcrun simctl addmedia "StreetEats iPhone 17" path/to/photo.jpg` adds it to the Simulator's Photos. Upload it from a vendor page; the stored copy has no location or camera data.
+
 If you deny location access, the app and the website offer a built-in list of LA neighborhoods instead. That list is searched on the device, so nothing you type is sent anywhere.
 - **Bad signal:** install *Network Link Conditioner* (Xcode → Open Developer Tool → More Developer Tools → "Additional Tools for Xcode") and pick the "Very Bad Network" or "100% Loss" profile. It affects the Simulator too. The vendor app gets a built-in "Simulate no signal" switch in M5.
 
@@ -163,7 +171,23 @@ No account is needed to browse.
 3. Open **Filters** to filter by distance, category, price, payment type or language spoken (try Zapotec or Korean). Turn off **Open now** to also see vendors who plan to be somewhere later (dashed pins).
 4. Tap a pin, then **View**, for the full profile with menu, schedule, upcoming spots and reviews. **Get directions** opens Apple or Google Maps at the vendor's public point. For approximate-area vendors that point is up to ~150 m from the cart.
 
-Favorites, reviews and photos arrive in M4.
+**Signed in** as `customer@demo.test`, a vendor's page also has:
+
+5. **♡ Save** to keep them under **Favorites** (a tab on iPhone, a header link on the web), with live status and where they'll be next. **Tell me when they open** is saved; real notifications come later, and the phone, not the server, would decide what's "near me".
+6. **Write a review**: one per vendor, editable. Reviews with links, phone numbers or slurs wait for a moderator first.
+7. **Add a photo** of what you bought. It's shrunk on the phone, uploaded in resumable chunks, re-encoded on the server with all location and camera data removed, and shown only after a moderator approves it.
+8. **Are they here right now? → Yes, they're here** (only while the vendor is live and you're within ~400 m). Your location is checked once and never stored. One per vendor per day.
+9. **Report** a vendor, a photo or a review.
+
+## Moderating
+
+Sign in as `admin@demo.test` and open **Moderation** in the header (http://localhost:3100/en/admin):
+
+- **Photos waiting**: customer photos, visible only to moderators until approved. **Reject** deletes the photo and its files.
+- **Reviews waiting**: reviews the text screen held back.
+- **Open reports**: what was reported and why (never who reported it). **Uphold and take down** removes the photo, review or post; **Dismiss** and **Mark resolved** close the report.
+
+The seed leaves one customer photo waiting so the queue isn't empty.
 
 ## Trying it as a vendor
 
@@ -177,6 +201,8 @@ Use `newvendor@demo.test` to try the quick start, or `vendor@demo.test` for a st
 4. Mark an item **Sold out**, or post an update ("Fresh mangos until 6"). Both show on your public page right away.
 5. Press **Close now**. You disappear from the map and the location is deleted. If you switch to another tab instead, you go offline on your own after 5 minutes.
 6. **My profile** has payment badges (types only, never account names or numbers), languages, the default map precision, an optional public contact (off by default) and vacation mode.
+7. **Photos** sets the profile and cover photos and the food gallery, and lists customer photos: **Hide from my page** (not delete), **Report**, or **Block this person**.
+8. **Reviews** lets you reply publicly, report a review or block its author. Blocked people can't review you, add photos or confirm you; reviews they already wrote stay up unless a moderator removes them, so blocking can't be used to hide criticism.
 
 **On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)).
 
