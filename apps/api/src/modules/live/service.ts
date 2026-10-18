@@ -81,18 +81,20 @@ export async function startLiveSession(
   }
 
   const [existing] = await ctx.db
-    .select({ cellKey: vendorLiveSessions.cellKey, precision: vendorLiveSessions.precision })
+    .select({ cellKey: vendorLiveSessions.cellKey, precision: vendorLiveSessions.precision, startedAt: vendorLiveSessions.startedAt })
     .from(vendorLiveSessions)
     .where(eq(vendorLiveSessions.vendorId, vendor.id));
   const previousCell = existing?.precision === precision ? existing.cellKey : null;
   const loc = publicLocation(rawPoint, precision, vendor.id, fuzzOptions(ctx), previousCell);
   const expiresAt = new Date(now.getTime() + ctx.config.live.graceSec * 1000);
+  // startedAt identifies the session (see heartbeatLiveSession): every start gets a new one.
+  const startedAt = existing && existing.startedAt >= now ? new Date(existing.startedAt.getTime() + 1) : now;
 
   const values = {
     publicPoint: pointSql(loc),
     precision,
     cellKey: loc.cellKey,
-    startedAt: now,
+    startedAt,
     lastHeartbeatAt: now,
     expiresAt,
     endsAt,
@@ -110,13 +112,18 @@ export async function startLiveSession(
  * A heartbeat keeps an existing session alive and moves the public point if
  * the vendor moved. It never revives an expired session: the app has to
  * start a new one (so a vendor who walked away from the app stays offline).
+ *
+ * `startedAt` names the session the device opened. Once another device has
+ * gone live for the same stand, the old device's heartbeats are refused, so
+ * a forgotten browser tab at home can't drag the pin away from the cart.
  */
-export async function heartbeatLiveSession(ctx: AppContext, vendorId: string, rawPoint: LatLng) {
+export async function heartbeatLiveSession(ctx: AppContext, vendorId: string, rawPoint: LatLng, startedAt?: string) {
   const [s] = await ctx.db
-    .select({ precision: vendorLiveSessions.precision, cellKey: vendorLiveSessions.cellKey })
+    .select({ precision: vendorLiveSessions.precision, cellKey: vendorLiveSessions.cellKey, startedAt: vendorLiveSessions.startedAt })
     .from(vendorLiveSessions)
     .where(and(eq(vendorLiveSessions.vendorId, vendorId), LIVE_NOW));
   if (!s) throw new ApiError('not_live');
+  if (startedAt !== undefined && s.startedAt.getTime() !== new Date(startedAt).getTime()) throw new ApiError('live_elsewhere');
 
   const loc = publicLocation(rawPoint, s.precision, vendorId, fuzzOptions(ctx), s.cellKey);
   const now = new Date();
@@ -128,9 +135,9 @@ export async function heartbeatLiveSession(ctx: AppContext, vendorId: string, ra
       lastHeartbeatAt: now,
       expiresAt: new Date(now.getTime() + ctx.config.live.graceSec * 1000),
     })
-    .where(and(eq(vendorLiveSessions.vendorId, vendorId), LIVE_NOW))
+    .where(and(eq(vendorLiveSessions.vendorId, vendorId), eq(vendorLiveSessions.startedAt, s.startedAt), LIVE_NOW))
     .returning({ vendorId: vendorLiveSessions.vendorId });
-  // Expired between the read and the write.
+  // Expired (or replaced by another device) between the read and the write.
   if (updated.length === 0) throw new ApiError('not_live');
 
   await touchLastLive(ctx, vendorId);

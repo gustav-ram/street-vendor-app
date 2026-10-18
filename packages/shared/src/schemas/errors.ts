@@ -17,6 +17,7 @@ export const ERROR_CODES = [
   'onboarding_required',
   'already_onboarded',
   'not_live',
+  'live_elsewhere',
   'vacation_mode',
   'internal',
 ] as const;

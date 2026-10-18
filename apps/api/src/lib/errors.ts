@@ -14,6 +14,7 @@ const STATUS: Record<ErrorCode, number> = {
   onboarding_required: 409,
   already_onboarded: 409,
   not_live: 409,
+  live_elsewhere: 409,
   vacation_mode: 409,
   rate_limited: 429,
   internal: 500,

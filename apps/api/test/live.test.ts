@@ -64,10 +64,38 @@ describe('Go Live', () => {
   it('heartbeats keep the same public point while the cart stays in its cell', async () => {
     const v = await onboardedVendor(ctx);
     const first = (await call('POST', '/v1/vendor/live', v.headers, { location: SPOT })).json();
-    const hb = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: { lat: SPOT.lat + 0.00003, lng: SPOT.lng - 0.00002 } });
+    const hb = await call('POST', '/v1/vendor/live/heartbeat', v.headers, {
+      location: { lat: SPOT.lat + 0.00003, lng: SPOT.lng - 0.00002 },
+      startedAt: first.startedAt,
+    });
     expect(hb.statusCode).toBe(200);
     expect(hb.json().location).toEqual(first.location);
     expect(new Date(hb.json().expiresAt) >= new Date(first.expiresAt)).toBe(true);
+  });
+
+  it('a device whose session was replaced by another device cannot move the pin', async () => {
+    const v = await onboardedVendor(ctx);
+    const phone = (await call('POST', '/v1/vendor/live', v.headers, { location: SPOT })).json();
+    // The vendor opens the dashboard on a laptop far away and goes live there.
+    const HOME = { lat: 34.1, lng: -118.33 };
+    const laptop = (await call('POST', '/v1/vendor/live', v.headers, { location: HOME })).json();
+    expect(laptop.startedAt).not.toBe(phone.startedAt);
+    const before = await storedPoint(v.vendorId);
+
+    const stale = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: SPOT, startedAt: phone.startedAt });
+    expect(stale.statusCode).toBe(409);
+    expect(stale.json().error.code).toBe('live_elsewhere');
+    expect(await storedPoint(v.vendorId)).toEqual(before);
+
+    const ok = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: HOME, startedAt: laptop.startedAt });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('heartbeats must name the session they belong to', async () => {
+    const v = await onboardedVendor(ctx);
+    await call('POST', '/v1/vendor/live', v.headers, { location: SPOT });
+    const res = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: SPOT });
+    expect(res.statusCode).toBe(400);
   });
 
   it('going offline deletes the location immediately', async () => {
@@ -81,14 +109,14 @@ describe('Go Live', () => {
 
   it('heartbeat loss: the vendor disappears when the grace period ends, and the row is swept', async () => {
     const v = await onboardedVendor(ctx);
-    await call('POST', '/v1/vendor/live', v.headers, { location: SPOT });
+    const { startedAt } = (await call('POST', '/v1/vendor/live', v.headers, { location: SPOT })).json();
     // Simulate the phone going quiet for longer than the grace period.
     await ctx.db.update(vendorLiveSessions).set({ expiresAt: sql`now() - interval '1 second'` }).where(eq(vendorLiveSessions.vendorId, v.vendorId));
 
     expect(await searchIds()).toEqual([]);
     expect((await call('GET', '/v1/vendor/live', v.headers)).json().state).toBe('offline');
     // A late heartbeat does not bring them back; the app must start again.
-    const late = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: SPOT });
+    const late = await call('POST', '/v1/vendor/live/heartbeat', v.headers, { location: SPOT, startedAt });
     expect(late.statusCode).toBe(409);
     expect(late.json().error.code).toBe('not_live');
 

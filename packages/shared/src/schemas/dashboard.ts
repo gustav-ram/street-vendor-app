@@ -68,7 +68,16 @@ export const goLiveSchema = z.object({
 });
 export type GoLiveInput = z.input<typeof goLiveSchema>;
 
-export const heartbeatSchema = z.object({ location: latLngSchema });
+export const heartbeatSchema = z.object({
+  location: latLngSchema,
+  /**
+   * The startedAt of the session this device opened. If another phone or
+   * browser has since gone live for the same stand, the heartbeat is refused
+   * (live_elsewhere), so a second device never moves the pin to where it is.
+   */
+  startedAt: z.iso.datetime({ offset: true }),
+});
+export type HeartbeatInput = z.infer<typeof heartbeatSchema>;
 
 export const liveStatusSchema = z.object({
   state: z.enum(['live', 'offline']),

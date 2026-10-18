@@ -13,6 +13,7 @@
   "onboarding_required": "Set up your business first.",
   "already_onboarded": "Your business is already set up.",
   "not_live": "You're not on the map right now.",
+  "live_elsewhere": "Your stand is live from another phone or browser.",
   "vacation_mode": "Turn off vacation mode to go live.",
   "internal": "Something went wrong on our side. Please try again.",
   "network": "No connection. Check your signal and try again."

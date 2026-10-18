@@ -135,7 +135,7 @@ export const dashboardRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { body: heartbeatSchema, response: { 200: liveStatusSchema } }, config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
     async (request) => {
       const vendor = await requireVendor(request);
-      return heartbeatLiveSession(ctx, vendor.id, request.body.location);
+      return heartbeatLiveSession(ctx, vendor.id, request.body.location, request.body.startedAt);
     },
   );
 

@@ -13,6 +13,7 @@
   "onboarding_required": "Primero configura tu negocio.",
   "already_onboarded": "Tu negocio ya está configurado.",
   "not_live": "No estás en el mapa en este momento.",
+  "live_elsewhere": "Tu puesto está abierto desde otro teléfono o navegador.",
   "vacation_mode": "Apaga el modo vacaciones para aparecer en el mapa.",
   "internal": "Algo salió mal de nuestro lado. Intenta de nuevo.",
   "network": "Sin conexión. Revisa tu señal e intenta de nuevo."
