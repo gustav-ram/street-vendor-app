@@ -13,7 +13,7 @@
     "admin": "tsx scripts/admin.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
-    "demo:live": "tsx scripts/demo-live.ts"
+    "demo:live": "node --import tsx scripts/demo-live.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.3",
