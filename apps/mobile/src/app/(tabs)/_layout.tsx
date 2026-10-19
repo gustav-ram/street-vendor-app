@@ -3,7 +3,10 @@ import { Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '@/theme';
 
-const icon = (emoji: string) => () => <Text style={{ fontSize: 24 }}>{emoji}</Text>;
+const icon = (emoji: string) =>
+  function TabIcon() {
+    return <Text style={{ fontSize: 24 }}>{emoji}</Text>;
+  };
 
 export default function TabsLayout() {
   const { t } = useTranslation();

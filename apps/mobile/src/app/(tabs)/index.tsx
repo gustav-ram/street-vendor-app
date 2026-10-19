@@ -43,7 +43,8 @@ export default function ExploreScreen() {
   const [q, setQ] = useState('');
   const [view, setView] = useState<'map' | 'list'>('map');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [locateState, setLocateState] = useState<LocateState>('idle');
+  // Starts as 'locating' because the screen asks for a location as soon as it opens.
+  const [locateState, setLocateState] = useState<LocateState>('locating');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [placeQuery, setPlaceQuery] = useState('');
   const [movedTo, setMovedTo] = useState<LatLng | null>(null);
@@ -51,7 +52,6 @@ export default function ExploreScreen() {
   const userTouched = useRef(false);
 
   const locate = useCallback(async () => {
-    setLocateState('locating');
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -68,12 +68,18 @@ export default function ExploreScreen() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- state only changes after the OS location prompt answers
     void locate();
   }, [locate]);
 
-  useEffect(() => {
+  // A new origin clears the "moved the map" state and the selection (set during render, not in an effect).
+  const [shownOrigin, setShownOrigin] = useState(origin);
+  if (shownOrigin !== origin) {
+    setShownOrigin(origin);
     setMovedTo(null);
     setSelectedId(null);
+  }
+  useEffect(() => {
     mapRef.current?.animateToRegion(
       { latitude: origin.lat, longitude: origin.lng, latitudeDelta: REGION_DELTA, longitudeDelta: REGION_DELTA },
       400,
@@ -354,6 +360,7 @@ export default function ExploreScreen() {
               label={locateState === 'locating' ? t('location.locating') : `📍 ${t('location.useMine')}`}
               onPress={() => {
                 setPickerOpen(false);
+                setLocateState('locating');
                 void locate();
               }}
             />

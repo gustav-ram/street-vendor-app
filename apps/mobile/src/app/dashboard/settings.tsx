@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,6 +8,7 @@ import {
   LANGUAGES,
   type LanguageCode,
   LIMITS,
+  type MyVendor,
   PAYMENT_METHODS,
   type PaymentMethod,
   type Precision,
@@ -24,36 +25,28 @@ function toggle<T>(list: T[], item: T, max = 99) {
 }
 
 export default function SettingsScreen() {
+  const vendor = useMyVendor();
+  if (!vendor.data) return null;
+  return <SettingsForm v={vendor.data} />;
+}
+
+/** Starts from the saved profile once, so a background refetch or sync never wipes edits in progress. */
+function SettingsForm({ v }: { v: MyVendor }) {
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('catalog');
   const { t: te } = useTranslation('errors');
-  const vendor = useMyVendor();
   const setMyVendor = useSetMyVendor();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [payments, setPayments] = useState<PaymentMethod[]>([]);
-  const [languages, setLanguages] = useState<LanguageCode[]>([]);
-  const [precision, setPrecision] = useState<Precision>('approximate');
-  const [contactText, setContactText] = useState('');
-  const [contactVisible, setContactVisible] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [name, setName] = useState(v.displayName);
+  const [description, setDescription] = useState(v.description);
+  const [categories, setCategories] = useState<Category[]>(v.categories);
+  const [payments, setPayments] = useState<PaymentMethod[]>(v.paymentMethods);
+  const [languages, setLanguages] = useState<LanguageCode[]>(v.languages);
+  const [precision, setPrecision] = useState<Precision>(v.defaultPrecision);
+  const [contactText, setContactText] = useState(v.contactText ?? '');
+  const [contactVisible, setContactVisible] = useState(v.contactVisible);
+  const [hidden, setHidden] = useState(v.hidden);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: 'info' | 'error' } | null>(null);
-
-  useEffect(() => {
-    const v = vendor.data;
-    if (!v) return;
-    setName(v.displayName);
-    setDescription(v.description);
-    setCategories(v.categories);
-    setPayments(v.paymentMethods);
-    setLanguages(v.languages);
-    setPrecision(v.defaultPrecision);
-    setContactText(v.contactText ?? '');
-    setContactVisible(v.contactVisible);
-    setHidden(v.hidden);
-  }, [vendor.data]);
 
   async function save() {
     setBusy(true);
@@ -79,7 +72,6 @@ export default function SettingsScreen() {
     }
   }
 
-  if (!vendor.data) return null;
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">

@@ -91,7 +91,7 @@ export function Segmented<T extends string>({
   onChange,
 }: {
   value: T;
-  options: Array<{ value: T; label: string; hint?: string }>;
+  options: { value: T; label: string; hint?: string }[];
   onChange: (v: T) => void;
 }) {
   return (

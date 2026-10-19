@@ -24,7 +24,9 @@ export default function GoLiveScreen() {
   const now = useNow(5_000);
   const vendor = useMyVendor();
   const live = useLive();
-  const [precision, setPrecision] = useState<Precision>('approximate');
+  // The vendor's default until they pick one here; a refetch doesn't undo their pick.
+  const [precisionChoice, setPrecision] = useState<Precision | null>(null);
+  const precision = precisionChoice ?? vendor.data?.defaultPrecision ?? 'approximate';
   const [autoOff, setAutoOff] = useState<AutoOff>(null);
 
   const needsOnboarding = vendor.error instanceof ApiRequestError && vendor.error.code === 'onboarding_required';
@@ -33,9 +35,7 @@ export default function GoLiveScreen() {
   }, [needsOnboarding, router]);
 
   useEffect(() => {
-    if (!vendor.data) return;
-    setPrecision(vendor.data.defaultPrecision);
-    syncLive(vendor.data.live);
+    if (vendor.data) syncLive(vendor.data.live);
   }, [vendor.data]);
 
   if (needsOnboarding || (!vendor.data && !vendor.isError)) {
