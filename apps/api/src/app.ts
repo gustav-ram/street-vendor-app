@@ -17,12 +17,14 @@ import { ApiError } from './lib/errors';
 import { loggerOptions, safeError } from './lib/logging';
 import { createStorage, type Storage } from './lib/storage';
 import { type AuthUser, createTokenService, type TokenService } from './lib/tokens';
+import { accountRoutes } from './modules/account/routes';
 import { adminRoutes } from './modules/admin/routes';
 import { authRoutes } from './modules/auth/routes';
 import { communityRoutes } from './modules/community/routes';
 import { vendorCommunityRoutes } from './modules/community/vendor-routes';
 import { dashboardRoutes } from './modules/dashboard/routes';
 import { discoveryRoutes } from './modules/discovery/routes';
+import { inviteRoutes } from './modules/invites/routes';
 import { mediaRoutes, photoRoutes } from './modules/photos/routes';
 import { uploadRoutes } from './modules/uploads/routes';
 
@@ -146,6 +148,8 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
   await app.register(photoRoutes, { prefix: '/v1' });
   await app.register(communityRoutes, { prefix: '/v1' });
   await app.register(vendorCommunityRoutes, { prefix: '/v1' });
+  await app.register(accountRoutes, { prefix: '/v1' });
+  await app.register(inviteRoutes, { prefix: '/v1' });
   await app.register(adminRoutes, { prefix: '/v1' });
   await app.register(mediaRoutes);
 

@@ -13,7 +13,7 @@ import { requireUser } from '../../app';
 import { ApiError } from '../../lib/errors';
 import * as auth from './service';
 
-const REFRESH_COOKIE = 'se_rt';
+export const REFRESH_COOKIE = 'se_rt';
 const AUTH_RATE_LIMIT = { rateLimit: { max: 10, timeWindow: '1 minute' } };
 
 /**

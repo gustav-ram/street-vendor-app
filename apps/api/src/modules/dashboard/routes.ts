@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
+  ANALYTICS_RANGES,
   deleteInputSchema,
   goLiveSchema,
   heartbeatSchema,
@@ -14,6 +15,7 @@ import {
   statusPostInputSchema,
   upcomingPostInputSchema,
   vendorProfileUpdateSchema,
+  vendorAnalyticsSchema,
   verificationProgressSchema,
   writeResultSchema,
 } from '@streeteats/shared';
@@ -26,6 +28,7 @@ import {
   pendingOpenNotifications,
   startLiveSession,
 } from '../live/service';
+import { vendorAnalytics } from '../analytics/service';
 import { refreshVerification } from '../verification/service';
 import * as dash from './service';
 
@@ -132,6 +135,19 @@ export const dashboardRoutes: FastifyPluginAsyncZod = async (app) => {
     '/vendor/schedule',
     { schema: { body: scheduleInputSchema, response: { 200: myVendorSchema } } },
     async (request) => dash.putSchedule(ctx, await requireVendor(request), request.body),
+  );
+
+  // ---------------------------------------------------------------- stats (daily totals only)
+
+  app.get(
+    '/vendor/analytics',
+    {
+      schema: {
+        querystring: z.object({ range: z.enum(ANALYTICS_RANGES).default('7d') }),
+        response: { 200: vendorAnalyticsSchema },
+      },
+    },
+    async (request) => vendorAnalytics(ctx, await requireVendor(request), request.query.range),
   );
 
   // ---------------------------------------------------------------- "Community Verified" progress

@@ -1,17 +1,22 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
+  adminInviteSchema,
   adminReportsSchema,
   adminVendorSchema,
   adminVendorsQuerySchema,
+  createInviteSchema,
+  inviteStatsSchema,
   moderationDecisionSchema,
   moderationQueueSchema,
   REPORT_STATUSES,
   reportDecisionSchema,
+  updateInviteSchema,
   verificationDecisionSchema,
   verificationProgressSchema,
 } from '@streeteats/shared';
 import { requireUser } from '../../app';
+import { createInvite, getInvite, inviteStats, listInvites, setInviteDisabled } from '../invites/service';
 import { decideVerification, listVendorsForAdmin } from '../verification/service';
 import { decide, decideReport, listReports, moderationQueue } from './service';
 
@@ -61,5 +66,33 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     '/admin/vendors/:id/verification',
     { schema: { params: z.object({ id: z.uuid() }), body: verificationDecisionSchema, response: { 200: verificationProgressSchema } } },
     async (request) => decideVerification(ctx, request.params.id, request.body),
+  );
+
+  // Invite codes for flyers. Only counts: how many were made and used, never by whom.
+  app.get(
+    '/admin/invites',
+    { schema: { response: { 200: z.object({ invites: z.array(adminInviteSchema), stats: inviteStatsSchema }) } } },
+    async () => ({ invites: await listInvites(ctx), stats: await inviteStats(ctx) }),
+  );
+
+  app.post(
+    '/admin/invites',
+    { schema: { body: createInviteSchema, response: { 201: adminInviteSchema } } },
+    async (request, reply) => {
+      reply.code(201);
+      return createInvite(ctx, request.body);
+    },
+  );
+
+  app.get(
+    '/admin/invites/:id',
+    { schema: { params: z.object({ id: z.uuid() }), response: { 200: adminInviteSchema } } },
+    async (request) => getInvite(ctx, request.params.id),
+  );
+
+  app.patch(
+    '/admin/invites/:id',
+    { schema: { params: z.object({ id: z.uuid() }), body: updateInviteSchema, response: { 200: adminInviteSchema } } },
+    async (request) => setInviteDisabled(ctx, request.params.id, request.body.disabled),
   );
 };
