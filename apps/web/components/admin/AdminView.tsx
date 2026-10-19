@@ -9,6 +9,7 @@ import { adminApi, useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { useErrorText } from "../community/dialogs";
 import { buttonClass, Field, Notice, Panel } from "../ui";
+import { InvitesPanel } from "./InvitesPanel";
 
 const small = "inline-flex min-h-11 items-center justify-center rounded-full border-2 px-4 font-bold disabled:opacity-50";
 const approveClass = `${small} border-live bg-live text-white`;
@@ -273,6 +274,7 @@ export function AdminView({ lang }: { lang: string }) {
       </Panel>
 
       <BadgesPanel lang={lang} onError={onError} />
+      <InvitesPanel lang={lang} onError={onError} />
     </main>
   );
 }

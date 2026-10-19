@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: repoRoot,
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
+    NEXT_PUBLIC_APP_LINK: process.env.NEXT_PUBLIC_APP_LINK ?? "streeteats://",
   },
   turbopack: {
     root: repoRoot,

@@ -28,7 +28,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
     <html lang={lang} className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         <Providers lang={lang}>
-          <header className="flex h-(--header-h) shrink-0 items-center justify-between gap-4 border-b-2 border-sand px-4 sm:px-6">
+          <header className="flex h-(--header-h) shrink-0 print:hidden items-center justify-between gap-4 border-b-2 border-sand px-4 sm:px-6">
             <a href={`/${lang}`} className="text-2xl font-black tracking-tight text-chile">
               {t("appName")}
             </a>

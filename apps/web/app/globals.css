@@ -60,3 +60,18 @@ body {
   border-color: var(--color-ink-soft);
   opacity: 0.85;
 }
+
+/* Printing an invite flyer: one Letter page, the site header and buttons left out. */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.4in;
+  }
+  body {
+    background: #fff;
+  }
+  .flyer {
+    min-height: auto;
+    break-inside: avoid;
+  }
+}
