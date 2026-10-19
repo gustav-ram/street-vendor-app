@@ -188,10 +188,11 @@ export async function runAdmin(ctx: AppContext, args: string[], print: Print = c
           (SELECT count(*) FROM photos WHERE moderation = 'pending')::int AS photos,
           (SELECT count(*) FROM reviews WHERE moderation = 'pending')::int AS reviews`);
       const invites = await inviteStats(ctx);
-      print(`Accounts: ${s!.customers} customers, ${s!.vendors} vendors, ${s!.admins} admins`);
+      // Label: number, so counts of 1 read correctly too.
+      print(`Accounts: customers ${s!.customers}, vendors ${s!.vendors}, admins ${s!.admins}`);
       print(`Live right now: ${s!.live}`);
-      print(`Waiting for moderators: ${s!.photos} photos, ${s!.reviews} reviews, ${s!.reports} open reports`);
-      print(`Invite codes: ${invites.codes} made, used ${invites.redemptions} times`);
+      print(`Waiting for moderators: photos ${s!.photos}, reviews ${s!.reviews}, open reports ${s!.reports}`);
+      print(`Invite codes: made ${invites.codes}, redemptions ${invites.redemptions}`);
       return 0;
     }
 

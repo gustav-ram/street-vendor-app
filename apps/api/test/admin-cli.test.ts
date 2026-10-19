@@ -77,7 +77,7 @@ describe('npm run admin', () => {
     await onboardedVendor(ctx);
     await signUp(ctx, 'customer');
     const r = await admin('stats');
-    expect(r.out).toContain('Accounts: 1 customers, 1 vendors, 0 admins');
+    expect(r.out).toContain('Accounts: customers 1, vendors 1, admins 0');
     expect(r.out).not.toMatch(/@/);
     expect((await admin('help')).code).toBe(0);
     expect((await admin('nonsense')).code).toBe(1);
