@@ -82,7 +82,9 @@ export async function buildApp({ config, db, rateLimit: rateLimitEnabled = true,
   app.addHook('onRequest', async (request) => {
     const header = request.headers.authorization;
     if (header?.startsWith('Bearer ')) {
-      request.user = await app.ctx.tokens.verifyAccess(header.slice(7));
+      const user = await app.ctx.tokens.verifyAccess(header.slice(7));
+      // A token outlives a deleted account by up to 15 minutes; it stops working at once.
+      if (user && (await db.execute(sql`SELECT 1 FROM users WHERE id = ${user.id}`)).length > 0) request.user = user;
     }
   });
 
