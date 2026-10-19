@@ -103,6 +103,7 @@ async function refreshPriceLevel(tx: Conn, vendorId: string) {
 
 export async function quickStart(ctx: AppContext, userId: string, input: QuickStartInput & { paymentMethods: string[] }) {
   const timezone = validTimezone(input.timezone, ctx.config.defaultTimezone);
+  const createdAt = new Date();
   try {
     await ctx.db.transaction(async (tx) => {
       const [v] = await tx
@@ -120,7 +121,9 @@ export async function quickStart(ctx: AppContext, userId: string, input: QuickSt
         .returning({ id: vendorProfiles.id });
       const vendorId = v!.id;
       await tx.insert(menuItems).values(
-        input.menu.map((m, i) => ({ id: m.id, vendorId, name: m.name, priceCents: m.priceCents, sortOrder: i })),
+        // Stamped with this server's clock, like every later edit is checked against (not the database's,
+        // which can drift a little and would make the vendor's first edit look older).
+        input.menu.map((m, i) => ({ id: m.id, vendorId, name: m.name, priceCents: m.priceCents, sortOrder: i, clientUpdatedAt: createdAt })),
       );
       await syncBaseTags(tx, vendorId, [], input.categories);
       await tx.insert(verificationProgress).values({ vendorId }).onConflictDoNothing();
