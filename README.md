@@ -1,6 +1,6 @@
 # StreetEats Finder (working name)
 
-A "Yelp for street vendors": customers find nearby open hot dog carts, taco stands, fruit carts, elote, flowers and more on a live map; vendors tap **I'm Open** to appear. Everything runs locally. Privacy is a core design constraint (see [PLAN.md](PLAN.md); `PRIVACY_DESIGN.md` is written in M6).
+A "Yelp for street vendors": customers find nearby open hot dog carts, taco stands, fruit carts, elote, flowers and more on a live map; vendors tap **I'm Open** to appear. Everything runs locally. Privacy is a core design constraint: [PRIVACY_DESIGN.md](PRIVACY_DESIGN.md) lists what's stored, for how long and who can see it, plus the threat model. [PLAN.md](PLAN.md) has the architecture and decisions.
 
 | App | Path | URL |
 |---|---|---|
@@ -9,7 +9,7 @@ A "Yelp for street vendors": customers find nearby open hot dog carts, taco stan
 | iOS app (Expo, runs in Expo Go) | `apps/mobile` | Metro on port 8090 |
 | Shared types, schemas, EN/ES strings | `packages/shared` | |
 
-> **Status:** M1–M5 are done: customer map and search, vendor tools and Go Live, photos, reviews and moderation, "where I'll be" posts, the vendor app's offline mode and the Community Verified badge. Invite codes, analytics, privacy screens and account export/delete arrive in M6 ([PLAN.md §8](PLAN.md)).
+> **Status:** M1–M6 are done (2026-10-19): customer map and search, vendor tools and Go Live, photos, reviews and moderation, "where I'll be" posts, the vendor app's offline mode, the Community Verified badge, invite codes with printable QR flyers, vendor stats, "Your privacy" screens, download and delete my data, and an admin command line ([PLAN.md §8](PLAN.md)).
 
 ## Prerequisites
 
@@ -102,7 +102,7 @@ All demo accounts use the password **`streeteats-demo`**.
 | `customer@demo.test` | Customer | Favorites, reviews, photos, "Still here?" (the account is a month old, so it can confirm vendors) |
 | `vendor@demo.test` | Vendor | Owns "Danger Dogs de la Esquina", fully set up |
 | `newvendor@demo.test` | Vendor | No business yet, for trying the quick start |
-| `admin@demo.test` | Admin | Moderation queue and reports at http://localhost:3100/en/admin |
+| `admin@demo.test` | Admin | Moderation queue, reports and invite codes at http://localhost:3100/en/admin |
 
 All demo data (accounts and everything they own) is flagged as demo and can be removed before real vendors join. Tags and search synonyms are kept.
 
@@ -136,6 +136,10 @@ API integration tests run against the `streeteats_test` database and refuse to r
 - **"Where I'll be" posts and schedules:** approximate mode stores only the snapped point (never the coordinates the phone sent), the same spot always gives the same point, exact mode rounds to ~1 m; posts disappear the moment their window ends and are deleted an hour later; offline edits apply last-write-wins and retries are harmless; a delete can't be undone by a late edit; limits on length, how far ahead and how many.
 - **Community Verified badge:** granted only when all four criteria are met; one loyal customer never counts as several; the confirmations step is remembered after old taps expire; open reports never block it, but an upheld report against the vendor (not a customer's review on their page) removes it; an admin revoke holds until restored; the badge never changes search order.
 - **Reviews, favorites, reports:** one review per customer, links/phones/slurs held for moderation, vendor replies, blocking without revealing who; favorite counts; reports never show the reporter, and upholding one takes the content down; moderation is for admins only.
+- **Download and delete my data:** the zip holds everything about the person plus the photos they uploaded, and never a password hash, a token or another person's identity. Deleting asks for the password again. After a vendor is deleted, a scan of every text and id column in the database finds nothing that points to them, and their photo files are gone. A deleted customer's reports stay for moderators, unlinked. Their sign-ins stop working at once. The admin command line uses the same purge.
+- **Vendor stats:** daily totals for 7 or 30 days, with zeros for quiet days; the stats table only has counters.
+- **Invite codes:** using a code only adds to its count; limits, expiry and disabling work; only admins manage codes; the public check says valid or not and nothing else; no table links a code to an account.
+- **Admin command line:** a new admin's one-time password works; a password reset unlocks the account and signs it out everywhere; invites, badge revoke and restore; delete-account needs `--yes`; stats show totals only.
 
 The shared package tests cover:
 
@@ -148,6 +152,10 @@ The shared package tests cover:
 
 ```bash
 npm run typecheck
+```
+
+```bash
+npm run lint
 ```
 
 ## Simulating location and poor connectivity
@@ -185,6 +193,11 @@ No account is needed to browse.
 9. **Are they here right now? → Yes, they're here** (only while the vendor is live and you're within ~400 m). Your location is checked once and never stored. One per vendor per day.
 10. **Report** a vendor, a photo or a review.
 
+**Your privacy** (🔒 in the web header; **Account → Your privacy** on iPhone) explains in plain English or Spanish what's shared and when. Anyone signed in can also open **Account** (👤 on the web; **Account → Download or delete my data** on iPhone):
+
+- **Download my data** gives a .zip with everything StreetEats keeps about you and the photos you uploaded. On iPhone it opens the share sheet, so you choose where it goes.
+- **Delete my account** asks for your password or PIN, takes a vendor off the map first, then deletes the account and everything in it, photo files included. It can't be undone.
+
 ## Moderating
 
 Sign in as `admin@demo.test` and open **Moderation** in the header (http://localhost:3100/en/admin):
@@ -195,6 +208,36 @@ Sign in as `admin@demo.test` and open **Moderation** in the header (http://local
 - **Community Verified badges**: lists verified and revoked vendors, or find one by name. **Revoke badge** asks for a reason (the vendor sees it) and keeps the badge off until you **Restore** it; restoring re-checks the criteria.
 
 The seed leaves one customer photo waiting so the queue isn't empty.
+
+## Inviting vendors (invite codes and QR flyers)
+
+Signed in as `admin@demo.test`, the bottom of the Moderation page has **Invite codes and flyers**:
+
+1. Enter a campaign name only admins see (for example "Boyle Heights flyers, October"), optionally a limit and how many days it lasts, and press **Create code**. Codes look like `ELOTE-2365`.
+2. **Print flyer** opens a bilingual Letter page with big text, the three steps ("Sign up free. Tap 'I'm Open'. Customers find you.") and a QR code. Press **Print or save as PDF**. The QR code is drawn in your browser; no outside service sees the link.
+3. Scanning it opens `/join?code=…`, which checks the code and offers **Sign up here** (the vendor signup with the code filled in) or **Open in the app**. A code that's expired or used up still lets people sign up.
+4. **Copy link** copies the same join link; **Disable** stops a code.
+
+Only totals are kept: how many codes and how many times each was used, never who used them.
+
+**Open in the app** uses `NEXT_PUBLIC_APP_LINK` from `.env`. The default, `streeteats://`, is what an installed build of the app opens. While testing with Expo Go, set it to `exp://127.0.0.1:8090/--/` and restart the web app.
+
+## Admin command line
+
+For things with no screen yet, or when you can't sign in. Run it from the repo root; it reads the same `.env` as the API:
+
+```bash
+npm run admin -- help
+```
+
+| Command | What it does |
+|---|---|
+| `npm run admin -- create-admin <email> --name "Name"` | Creates an admin and prints a new password once |
+| `npm run admin -- reset-password <email or phone>` | New password (or PIN for PIN accounts), printed once; unlocks the account and signs it out everywhere. There's no email sending, so this is how resets work for now |
+| `npm run admin -- invite create --label "Text" --max 50 --days 30` | Makes an invite code (`invite list`, `invite disable <CODE>`, `invite enable <CODE>`) |
+| `npm run admin -- badge revoke "<vendor name or id>" --reason "Text"` | Revokes a Community Verified badge (`badge restore` gives it back) |
+| `npm run admin -- delete-account <email or phone> --yes` | Deletes the account and everything in it, files included, the same way the app does |
+| `npm run admin -- stats` | Totals only: accounts, live vendors, moderation queues, invites |
 
 ## Trying it as a vendor
 
@@ -212,8 +255,9 @@ Use `newvendor@demo.test` to try the quick start, or `vendor@demo.test` for a st
 8. **Reviews** lets you reply publicly, report a review or block its author. Blocked people can't review you, add photos or confirm you; reviews they already wrote stay up unless a moderator removes them, so blocking can't be used to hide criticism.
 9. **📍 Where I'll be** lets you post future spots ("Saturday 5–9 pm near Broadway & 7th"): pick a day and times, move the map so the pin sits on the spot, choose approximate (the default) or exact, and add a place name or note. Customers see it on your page, under **Upcoming** on the map and in their favorites. Each spot disappears on its own when its time is over. Below it, the **weekly schedule** ("Fridays near the park") is shown only if you turn on **Show my schedule to customers**.
 10. **🛡️ Community Verified** on the dashboard shows your progress toward the badge, step by step, with counts only. `vendor@demo.test` already has it; a new vendor starts at zero.
+11. **📊 Stats** shows page views, times you showed up on the map, directions taps, new favorites and "Still here?" taps for the last 7 or 30 days, as totals and one column per day (tap or hover a column for its number; **Show the numbers** lists them). They're daily counts, never who. The seed gives each demo vendor 30 days of numbers.
 
-**On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)). **Where I'll be**, **Weekly schedule** and **Community Verified** are buttons on the dashboard.
+**On iPhone:** open the **Account** tab → sign in → **Open my vendor dashboard**. It works the same way and keeps the screen awake while you're live. Set the Simulator's location first (see [Simulating location](#simulating-location-and-poor-connectivity)). **Where I'll be**, **Weekly schedule**, **Community Verified** and **📊 Stats** are buttons on the dashboard.
 
 **Offline mode (iPhone):** the dashboard keeps working with no signal.
 
@@ -237,6 +281,8 @@ Signing out drops the saved copy and anything not yet sent (you're warned first)
 | `npm run seed` / `npm run seed:clear` | Load / remove demo data |
 | `npm run seed -- -- --tags-only` | Reload tags and search synonyms only, keeping demo data |
 | `npm run demo:live` | Keep demo vendors live (Ctrl+C takes them offline) |
+| `npm run admin -- help` | Admin command line (see [Admin command line](#admin-command-line)) |
+| `npm test` / `npm run typecheck` / `npm run lint` | Tests, type checks and lint for every workspace |
 | `colima stop` | Stop the Docker VM when you're done |
 
 ## Ports
