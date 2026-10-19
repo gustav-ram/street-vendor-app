@@ -7,7 +7,7 @@ import { LIMITS, type ReportTarget, type VendorReview } from "@streeteats/shared
 import { vendorApi } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { ReportDialog, useErrorText } from "../community/dialogs";
-import { buttonClass, Notice, Panel, TextArea } from "../ui";
+import { buttonClass, Notice, Panel, Stars, TextArea } from "../ui";
 
 const small = "inline-flex min-h-11 items-center justify-center rounded-full border-2 border-ink bg-white px-4 font-bold hover:bg-sand disabled:opacity-50";
 
@@ -46,10 +46,7 @@ function ReviewCard({
   return (
     <li className="flex flex-col gap-3 rounded-3xl border-2 border-ink/10 bg-white p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span aria-label={`${r.rating}/5`} className="text-xl text-marigold">
-          {"★".repeat(r.rating)}
-          <span className="text-ink/20">{"★".repeat(5 - r.rating)}</span>
-        </span>
+        <Stars rating={r.rating} className="text-xl" />
         <span className="font-bold">{r.authorName ?? tv("anonymous")}</span>
         <span className="text-sm text-ink-soft">{new Intl.DateTimeFormat(f.locale, { dateStyle: "medium" }).format(new Date(r.createdAt))}</span>
         {r.authorBlocked && <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-bold text-white">{t("reviews.blocked")}</span>}

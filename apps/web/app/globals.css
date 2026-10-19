@@ -14,6 +14,8 @@
   --color-chile-dark: #8c1c13;
   --color-live: #157f3c;
   --color-marigold: #f5a524;
+  /* Stars: marigold is too light on white (2:1); this gold passes 4.5:1. */
+  --color-star: #a16207;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -28,8 +30,9 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Ink, not marigold: the ring must stand out from paper, white and sand (3:1+). */
 :focus-visible {
-  outline: 3px solid var(--color-marigold);
+  outline: 3px solid var(--color-ink);
   outline-offset: 2px;
 }
 

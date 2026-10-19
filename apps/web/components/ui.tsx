@@ -117,6 +117,16 @@ export function Switch({
 }
 
 /** A dashboard card with a heading. */
+/** A 1–5 rating: filled stars in gold, empty ones as outlines (not color alone), read out as "4/5". */
+export function Stars({ rating, className = "" }: { rating: number; className?: string }) {
+  return (
+    <span role="img" aria-label={`${rating}/5`} className={`whitespace-nowrap ${className}`}>
+      <span className="text-star">{"★".repeat(rating)}</span>
+      <span className="text-ink-soft">{"☆".repeat(5 - rating)}</span>
+    </span>
+  );
+}
+
 export function Panel({ title, children, className = "" }: { title?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`flex flex-col gap-4 rounded-3xl border-2 border-ink/10 bg-white/70 p-5 ${className}`}>

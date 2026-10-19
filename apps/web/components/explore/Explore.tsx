@@ -117,7 +117,7 @@ export function Explore() {
                     setMode(m);
                     setSelectedId(null);
                   }}
-                  className={`min-h-10 rounded-full px-4 font-bold ${mode === m ? (m === "now" ? "bg-live text-white" : "bg-ink text-white") : ""}`}
+                  className={`min-h-11 rounded-full px-4 font-bold ${mode === m ? (m === "now" ? "bg-live text-white" : "bg-ink text-white") : ""}`}
                 >
                   {m === "now" ? "● " : "📅 "}
                   {t(`tabs.${m}`)}
@@ -131,7 +131,7 @@ export function Explore() {
                   type="button"
                   aria-pressed={view === v}
                   onClick={() => setView(v)}
-                  className={`min-h-10 rounded-full px-4 font-bold ${view === v ? "bg-ink text-white" : ""}`}
+                  className={`min-h-11 rounded-full px-4 font-bold ${view === v ? "bg-ink text-white" : ""}`}
                 >
                   {t(`view.${v}`)}
                 </button>

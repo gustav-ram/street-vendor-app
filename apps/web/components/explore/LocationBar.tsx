@@ -36,7 +36,7 @@ export function LocationBar({
           type="button"
           onClick={onLocate}
           disabled={locateState === "locating"}
-          className="min-h-10 rounded-full border-2 border-ink/30 px-3 text-sm font-bold hover:border-ink disabled:opacity-60"
+          className="min-h-11 rounded-full border-2 border-ink/30 px-3 text-sm font-bold hover:border-ink disabled:opacity-60"
         >
           {locateState === "locating" ? t("location.locating") : t("location.useMine")}
         </button>
@@ -44,7 +44,7 @@ export function LocationBar({
           type="button"
           aria-expanded={picking}
           onClick={() => setPicking((p) => !p)}
-          className="min-h-10 rounded-full border-2 border-ink/30 px-3 text-sm font-bold hover:border-ink"
+          className="min-h-11 rounded-full border-2 border-ink/30 px-3 text-sm font-bold hover:border-ink"
         >
           {t("location.choose")}
         </button>

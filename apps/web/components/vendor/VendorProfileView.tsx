@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { useNow } from "@/lib/hooks/useNow";
 import { CommunityActions, PhotoGrid, ReportDialog } from "../community/VendorCommunity";
+import { Stars } from "../ui";
 import { BadgeExplainer, CategoryIcon, DirectionsButtons, LiveLine, PaymentBadges, PrecisionNote, Rating, VerifiedBadge } from "./bits";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -60,10 +61,7 @@ function Review({ r, onReport }: { r: ReviewPublic; onReport?: () => void }) {
   return (
     <li className="flex flex-col gap-1 rounded-2xl bg-white p-4">
       <div className="flex items-center gap-2">
-        <span aria-label={`${r.rating}/5`} className="text-marigold">
-          {"★".repeat(r.rating)}
-          <span className="text-ink/20">{"★".repeat(5 - r.rating)}</span>
-        </span>
+        <Stars rating={r.rating} />
         <span className="font-bold">{r.authorName ?? t("anonymous")}</span>
         <span className="text-sm text-ink-soft">{new Intl.DateTimeFormat(f.locale, { dateStyle: "medium" }).format(new Date(r.createdAt))}</span>
         {onReport && (
@@ -167,9 +165,9 @@ function Profile({ v }: { v: VendorProfile }) {
         ) : (
           <ul className="flex flex-col divide-y divide-sand rounded-2xl bg-white">
             {v.menu.map((m) => (
-              <li key={m.id} className={`flex items-start justify-between gap-4 px-4 py-3 ${m.soldOut ? "opacity-60" : ""}`}>
+              <li key={m.id} className="flex items-start justify-between gap-4 px-4 py-3">
                 <div>
-                  <p className={`text-lg font-bold ${m.soldOut ? "line-through" : ""}`}>{m.name}</p>
+                  <p className={`text-lg font-bold ${m.soldOut ? "text-ink-soft line-through" : ""}`}>{m.name}</p>
                   {m.description && <p className="text-ink-soft">{m.description}</p>}
                 </div>
                 <div className="flex shrink-0 flex-col items-end">

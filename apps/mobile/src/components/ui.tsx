@@ -115,6 +115,16 @@ export function Segmented<T extends string>({
   );
 }
 
+/** A 1–5 rating: filled stars in gold, empty ones as outlines (not color alone), read out as "4/5". */
+export function Stars({ rating, size = type.body }: { rating: number; size?: number }) {
+  return (
+    <Text accessibilityLabel={`${rating}/5`} style={{ fontSize: size }}>
+      <Text style={{ color: colors.star }}>{'★'.repeat(rating)}</Text>
+      <Text style={{ color: colors.inkSoft }}>{'☆'.repeat(5 - rating)}</Text>
+    </Text>
+  );
+}
+
 export function Notice({ text, tone = 'info' }: { text: string; tone?: 'info' | 'warn' | 'error' }) {
   const bg = tone === 'error' ? 'rgba(180,35,24,0.12)' : tone === 'warn' ? 'rgba(245,165,36,0.25)' : colors.sand;
   return <Text style={[fieldStyles.notice, { backgroundColor: bg }]}>{text}</Text>;

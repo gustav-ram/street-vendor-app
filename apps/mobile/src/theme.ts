@@ -8,6 +8,8 @@ export const colors = {
   chileDark: '#8C1C13',
   live: '#157F3C',
   marigold: '#F5A524',
+  // Stars: marigold is too light on white (2:1); this gold passes 4.5:1.
+  star: '#A16207',
   white: '#FFFFFF',
 } as const;
 

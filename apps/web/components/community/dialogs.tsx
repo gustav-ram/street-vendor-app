@@ -30,9 +30,9 @@ export function StarsInput({ value, onChange }: { value: number; onChange: (n: n
             <input type="radio" name="rating" value={n} checked={value === n} onChange={() => onChange(n)} className="peer sr-only" />
             <span
               aria-hidden
-              className={`grid size-12 place-items-center rounded-full text-4xl peer-focus-visible:outline-3 peer-focus-visible:outline-marigold ${n <= value ? "text-marigold" : "text-ink/20"}`}
+              className={`grid size-12 place-items-center rounded-full text-4xl peer-focus-visible:outline-3 peer-focus-visible:outline-ink ${n <= value ? "text-star" : "text-ink-soft"}`}
             >
-              ★
+              {n <= value ? "★" : "☆"}
             </span>
             <span className="sr-only">{t("reviews.stars", { count: n })}</span>
           </label>

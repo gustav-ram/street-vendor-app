@@ -66,7 +66,7 @@ export function InvitesPanel({ lang, onError }: { lang: string; onError: (e: unk
       {invites.data?.invites.length === 0 && <p className="text-ink-soft">{t("invites.empty")}</p>}
       <ul className="flex flex-col gap-3">
         {invites.data?.invites.map((i) => (
-          <li key={i.id} className={`flex flex-col gap-2 rounded-3xl border-2 border-ink/10 bg-white p-4 ${i.disabled ? "opacity-60" : ""}`}>
+          <li key={i.id} className={`flex flex-col gap-2 rounded-3xl border-2 border-ink/10 p-4 ${i.disabled ? "border-dashed bg-sand" : "bg-white"}`}>
             <div className="flex flex-wrap items-baseline gap-3">
               <span className="font-mono text-2xl font-black tracking-wider">{i.code}</span>
               <span className="font-bold">{i.label}</span>

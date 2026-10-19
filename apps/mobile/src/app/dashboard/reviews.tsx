@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { LIMITS, type ReportTarget, type VendorReview } from '@streeteats/shared';
 import { vendorApi } from '@/api/vendor';
 import { ReportSheet, useErrorText } from '@/components/community';
-import { Button, Field, Notice } from '@/components/ui';
+import { Button, Field, Notice, Stars } from '@/components/ui';
 import { useFormat } from '@/hooks/useFormat';
 import { colors, space, type } from '@/theme';
 
@@ -34,12 +34,11 @@ function ReviewCard({ r, onChanged, onReport, onError }: { r: VendorReview; onCh
 
   return (
     <View style={styles.card}>
-      <Text>
-        <Text style={{ color: colors.marigold, fontSize: type.body }}>{'★'.repeat(r.rating)}</Text>
-        <Text style={{ color: 'rgba(26,20,16,0.2)', fontSize: type.body }}>{'★'.repeat(5 - r.rating)}</Text>
-        <Text style={styles.strong}>  {r.authorName ?? tv('anonymous')}</Text>
-        <Text style={styles.muted}>  {new Intl.DateTimeFormat(f.locale, { dateStyle: 'medium' }).format(new Date(r.createdAt))}</Text>
-      </Text>
+      <View style={styles.head}>
+        <Stars rating={r.rating} />
+        <Text style={styles.strong}>{r.authorName ?? tv('anonymous')}</Text>
+        <Text style={styles.muted}>{new Intl.DateTimeFormat(f.locale, { dateStyle: 'medium' }).format(new Date(r.createdAt))}</Text>
+      </View>
       {r.authorBlocked && <Text style={styles.badge}>{t('reviews.blocked')}</Text>}
       {r.body ? <Text style={styles.body}>{r.body}</Text> : null}
 
@@ -145,6 +144,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: 20, padding: space.md, gap: space.sm, borderWidth: 1, borderColor: 'rgba(26,20,16,0.12)' },
   heading: { fontSize: type.heading - 2, fontWeight: '900', color: colors.ink, marginTop: space.md },
   strong: { fontSize: type.body - 1, fontWeight: '800', color: colors.ink },
+  head: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.sm },
   body: { fontSize: type.body - 1, color: colors.ink, lineHeight: 24 },
   muted: { fontSize: type.small, color: colors.inkSoft },
   reply: { borderLeftWidth: 4, borderLeftColor: colors.chile, paddingLeft: space.sm, gap: 2 },

@@ -67,7 +67,7 @@ export function StarsInput({ value, onChange }: { value: number; onChange: (n: n
             hitSlop={4}
             style={styles.star}
           >
-            <Text style={{ fontSize: 40, color: n <= value ? colors.marigold : 'rgba(26,20,16,0.2)' }}>★</Text>
+            <Text style={{ fontSize: 40, color: n <= value ? colors.star : colors.inkSoft }}>{n <= value ? '★' : '☆'}</Text>
           </Pressable>
         ))}
       </View>

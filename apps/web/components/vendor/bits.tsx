@@ -60,7 +60,7 @@ export function Rating({ average, count }: { average: number | null; count: numb
   if (!count || average === null) return <span className="text-ink-soft">{t("noRatings")}</span>;
   return (
     <span className="font-semibold">
-      <span aria-hidden className="text-marigold">★ </span>
+      <span aria-hidden className="text-star">★ </span>
       {t("rating", { average: average.toFixed(1), count })}
     </span>
   );

@@ -36,9 +36,9 @@ export default function MenuScreen() {
         ListHeaderComponent={<SyncBar savedAt={vendor.savedAt} />}
         ListEmptyComponent={<Text style={styles.muted}>{t('menu.empty')}</Text>}
         renderItem={({ item }) => (
-          <View style={[styles.row, item.soldOut && { opacity: 0.6 }]}>
+          <View style={styles.row}>
             <Pressable accessibilityRole="button" onPress={() => setEditing(item)} style={{ flex: 1, gap: 2 }}>
-              <Text style={[styles.name, item.soldOut && { textDecorationLine: 'line-through' }]}>{item.name}</Text>
+              <Text style={[styles.name, item.soldOut && { color: colors.inkSoft, textDecorationLine: 'line-through' }]}>{item.name}</Text>
               <Text style={styles.price}>{f.price(item.priceCents)}</Text>
               {pending.has(item.id) && <PendingChip />}
             </Pressable>

@@ -15,7 +15,7 @@ export function SelectedCard({ vendor, onClose }: { vendor: LiveResult | Upcomin
   const location = isLive(vendor) ? vendor.live.location : vendor.spot.location;
   return (
     <div className="absolute inset-x-3 bottom-3 z-[500] rounded-3xl border-2 border-ink bg-white p-4 shadow-xl md:right-auto md:left-4 md:w-[400px]">
-      <button type="button" onClick={onClose} aria-label={tc("actions.close")} className="absolute top-2 right-3 grid size-10 place-items-center text-2xl">
+      <button type="button" onClick={onClose} aria-label={tc("actions.close")} className="absolute top-2 right-3 grid size-11 place-items-center text-2xl">
         ×
       </button>
       <div className="flex gap-3 pr-8">

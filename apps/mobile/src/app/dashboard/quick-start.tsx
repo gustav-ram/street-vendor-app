@@ -110,7 +110,7 @@ export default function QuickStartScreen() {
               onChangeText={(v) => setRows(rows.map((x) => (x.id === r.id ? { ...x, price: v } : x)))}
             />
             {rows.length > 1 && (
-              <Pressable accessibilityRole="button" accessibilityLabel={t('quickStart.removeItem')} onPress={() => setRows(rows.filter((x) => x.id !== r.id))} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityLabel={t('quickStart.removeItem')} onPress={() => setRows(rows.filter((x) => x.id !== r.id))} style={styles.removeHit}>
                 <Text style={styles.remove}>✕</Text>
               </Pressable>
             )}
@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     backgroundColor: colors.white,
   },
-  remove: { fontSize: 22, color: colors.inkSoft, paddingHorizontal: 4 },
+  remove: { fontSize: 22, color: colors.inkSoft },
+  removeHit: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   link: { color: colors.chile, fontWeight: '800', fontSize: type.body - 1 },
 });

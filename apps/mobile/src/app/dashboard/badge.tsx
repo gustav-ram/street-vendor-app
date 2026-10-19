@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   content: { padding: space.md, gap: space.md, paddingBottom: space.xl * 2 },
   earned: { backgroundColor: colors.live, borderRadius: 16, padding: space.md, gap: 4 },
   earnedText: { color: colors.white, fontSize: type.body + 2, fontWeight: '900' },
-  earnedSince: { color: 'rgba(255,255,255,0.85)', fontSize: type.small, fontWeight: '700' },
+  earnedSince: { color: colors.white, fontSize: type.small, fontWeight: '700' },
   heading: { fontSize: type.body + 1, fontWeight: '900', color: colors.ink },
   step: { backgroundColor: colors.white, borderRadius: 16, padding: space.md, gap: 8 },
   stepHead: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },

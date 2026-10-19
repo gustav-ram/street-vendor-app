@@ -64,7 +64,7 @@ export default function StatsScreen() {
             <Text style={styles.heading}>{t('stats.perDay', { what: t(`stats.${metric}`) })}</Text>
             <Columns days={q.data.days} metric={metric} dayLabel={dayLabel} todayLabel={t('stats.today')} />
             {q.data.days.every((d) => d[metric] === 0) && <Text style={styles.muted}>{t('stats.empty')}</Text>}
-            <Pressable accessibilityRole="button" onPress={() => setShowTable((s) => !s)} hitSlop={8}>
+            <Pressable accessibilityRole="button" onPress={() => setShowTable((s) => !s)} style={{ minHeight: 44, justifyContent: 'center' }}>
               <Text style={styles.link}>
                 {showTable ? '▾' : '▸'} {t('stats.table')}
               </Text>

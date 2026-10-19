@@ -7,7 +7,7 @@ import { minutesAgo, type ReportTarget, type VendorProfile } from '@streeteats/s
 import { api, ApiRequestError } from '@/api/client';
 import { useAuth } from '@/auth/session';
 import { PhotoStrip, ReportSheet } from '@/components/community';
-import { Button } from '@/components/ui';
+import { Button, Stars } from '@/components/ui';
 import { VendorActions } from '@/components/VendorActions';
 import { BadgeExplainer, CategoryIcon, DirectionsButton, LiveLine, PaymentBadges, Rating, StatusBanner, VerifiedBadge } from '@/components/vendor';
 import { useFormat } from '@/hooks/useFormat';
@@ -127,9 +127,9 @@ function Profile({ v }: { v: VendorProfile }) {
         ) : (
           <View style={styles.menu}>
             {v.menu.map((m) => (
-              <View key={m.id} style={[styles.menuRow, m.soldOut && { opacity: 0.55 }]}>
+              <View key={m.id} style={styles.menuRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuName, m.soldOut && { textDecorationLine: 'line-through' }]}>{m.name}</Text>
+                  <Text style={[styles.menuName, m.soldOut && styles.menuNameSoldOut]}>{m.name}</Text>
                   {m.description ? <Text style={styles.muted}>{m.description}</Text> : null}
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
@@ -202,11 +202,10 @@ function Profile({ v }: { v: VendorProfile }) {
         ) : (
           v.reviews.map((r) => (
             <View key={r.id} style={styles.box}>
-              <Text>
-                <Text style={{ color: colors.marigold }}>{'★'.repeat(r.rating)}</Text>
-                <Text style={{ color: 'rgba(26,20,16,0.2)' }}>{'★'.repeat(5 - r.rating)}</Text>
-                <Text style={styles.strong}>  {r.authorName ?? t('anonymous')}</Text>
-              </Text>
+              <View style={styles.reviewHead}>
+                <Stars rating={r.rating} />
+                <Text style={styles.strong}>{r.authorName ?? t('anonymous')}</Text>
+              </View>
               {r.body ? <Text style={styles.body}>{r.body}</Text> : null}
               {r.vendorReply ? (
                 <View style={styles.reply}>
@@ -276,6 +275,8 @@ const styles = StyleSheet.create({
   menu: { backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden' },
   menuRow: { flexDirection: 'row', gap: space.md, padding: space.md, borderBottomWidth: 1, borderBottomColor: colors.sand },
   menuName: { fontSize: type.body, fontWeight: '800', color: colors.ink },
+  menuNameSoldOut: { color: colors.inkSoft, textDecorationLine: 'line-through' },
+  reviewHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm },
   price: { fontSize: type.body, fontWeight: '900', color: colors.ink },
   soldOut: { backgroundColor: colors.chile, color: colors.white, fontWeight: '800', fontSize: 13, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

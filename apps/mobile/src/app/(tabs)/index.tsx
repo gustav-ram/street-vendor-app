@@ -214,7 +214,7 @@ export default function ExploreScreen() {
           <Text style={styles.where} numberOfLines={1}>
             📍 {where}
           </Text>
-          <Pressable accessibilityRole="button" onPress={() => setPickerOpen(true)} hitSlop={8}>
+          <Pressable accessibilityRole="button" onPress={() => setPickerOpen(true)} hitSlop={8} style={styles.linkHit}>
             <Text style={styles.link}>{t('location.choose')}</Text>
           </Pressable>
           <View style={styles.segment} accessibilityRole="tablist">
@@ -344,7 +344,7 @@ export default function ExploreScreen() {
         <SafeAreaView style={styles.safe}>
           <View style={styles.pickerHead}>
             <Text style={styles.pickerTitle}>{t('location.choose')}</Text>
-            <Pressable accessibilityRole="button" onPress={() => setPickerOpen(false)} hitSlop={12}>
+            <Pressable accessibilityRole="button" onPress={() => setPickerOpen(false)} hitSlop={8} style={styles.linkHit}>
               <Text style={styles.link}>{tc('actions.close')}</Text>
             </Pressable>
           </View>
@@ -415,8 +415,10 @@ const styles = StyleSheet.create({
   locRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   where: { flexShrink: 1, fontWeight: '800', fontSize: type.small + 1, color: colors.ink },
   link: { color: colors.chile, fontWeight: '800', fontSize: type.small + 1 },
+  // Text links get at least 44 pt of height to tap.
+  linkHit: { minHeight: 44, justifyContent: 'center' },
   segment: { marginLeft: 'auto', flexDirection: 'row', borderWidth: 2, borderColor: colors.ink, borderRadius: 999, padding: 2 },
-  segmentItem: { minHeight: 40, minWidth: 64, paddingHorizontal: 12, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  segmentItem: { minHeight: 44, minWidth: 64, paddingHorizontal: 12, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   segmentOn: { backgroundColor: colors.ink },
   segmentText: { fontWeight: '800', fontSize: type.small, color: colors.ink },
   alert: { color: colors.chile, fontWeight: '700', fontSize: type.small },

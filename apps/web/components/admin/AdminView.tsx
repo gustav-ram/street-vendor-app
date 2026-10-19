@@ -8,7 +8,7 @@ import type { AdminReport, AdminVendor } from "@streeteats/shared";
 import { adminApi, useAuth } from "@/lib/auth";
 import { useFormat } from "@/lib/hooks/useFormat";
 import { useErrorText } from "../community/dialogs";
-import { buttonClass, Field, Notice, Panel } from "../ui";
+import { buttonClass, Field, Notice, Panel, Stars } from "../ui";
 import { InvitesPanel } from "./InvitesPanel";
 
 const small = "inline-flex min-h-11 items-center justify-center rounded-full border-2 px-4 font-bold disabled:opacity-50";
@@ -248,7 +248,7 @@ export function AdminView({ lang }: { lang: string }) {
           {queue.data?.reviews.map((r) => (
             <li key={r.id} className="flex flex-col gap-2 rounded-3xl border-2 border-ink/10 bg-white p-4">
               <p className="font-bold">
-                <span className="text-marigold">{"★".repeat(r.rating)}</span> {r.authorName ?? tv("anonymous")} · {t("for", { vendor: r.vendorName })}
+                <Stars rating={r.rating} /> {r.authorName ?? tv("anonymous")} · {t("for", { vendor: r.vendorName })}
               </p>
               <p className="text-lg">{r.body}</p>
               <div className="flex gap-2">

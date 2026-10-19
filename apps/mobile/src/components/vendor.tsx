@@ -48,7 +48,7 @@ export function Rating({ average, count }: { average: number | null; count: numb
   if (!count || average === null) return <Text style={styles.muted}>{t('noRatings')}</Text>;
   return (
     <Text style={styles.strong}>
-      <Text style={{ color: colors.marigold }}>★ </Text>
+      <Text style={{ color: colors.star }}>★ </Text>
       {t('rating', { average: average.toFixed(1), count })}
     </Text>
   );
@@ -71,7 +71,7 @@ export function BadgeExplainer() {
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 3_600_000, enabled: open });
   return (
     <View style={styles.explainer}>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} hitSlop={8}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={styles.explainerToggle}>
           {open ? '▾' : '▸'} {t('verifiedHow')}
         </Text>
