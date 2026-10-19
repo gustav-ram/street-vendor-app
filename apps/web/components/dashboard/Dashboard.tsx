@@ -9,6 +9,7 @@ import { PhotosManager } from "./PhotosManager";
 import { ProfileForm } from "./ProfileForm";
 import { ReviewsManager } from "./ReviewsManager";
 import { ScheduleEditor } from "./ScheduleEditor";
+import { StatsView } from "./StatsView";
 import { StatusComposer } from "./StatusComposer";
 import { UpcomingManager } from "./UpcomingManager";
 import { VendorGate } from "./VendorGate";
@@ -32,6 +33,9 @@ export function Dashboard({ lang }: { lang: string }) {
               </Link>
               <Link href={`/${lang}/vendor/plans`} className={linkClass}>
                 📍 {t("actions.upcoming")}
+              </Link>
+              <Link href={`/${lang}/vendor/stats`} className={linkClass}>
+                📊 {t("actions.stats")}
               </Link>
               <Link href={`/${lang}/vendor/photos`} className={linkClass}>
                 📷 {t("actions.photos")}
@@ -103,6 +107,15 @@ export function PlansPage({ lang }: { lang: string }) {
         </main>
       )}
     </VendorGate>
+  );
+}
+
+export function StatsPage({ lang }: { lang: string }) {
+  const { t } = useTranslation("dashboard");
+  return (
+    <SubPage lang={lang} title={t("stats.title")} wide>
+      <StatsView />
+    </SubPage>
   );
 }
 
