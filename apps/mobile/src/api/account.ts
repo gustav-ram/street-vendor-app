@@ -1,5 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import type { AnalyticsRange, VendorAnalytics } from '@streeteats/shared';
 import { authRequest, mediaHeaders } from '@/auth/session';
 import { API_URL } from '@/config';
 
@@ -29,3 +30,5 @@ export async function shareMyData() {
 /** Deletes the account for good; the caller then signs out locally. */
 export const deleteMyAccount = (secret: string) =>
   authRequest<void>('/v1/me', { method: 'DELETE', body: JSON.stringify({ secret }) });
+
+export const vendorStats = (range: AnalyticsRange) => authRequest<VendorAnalytics>(`/v1/vendor/analytics?range=${range}`);

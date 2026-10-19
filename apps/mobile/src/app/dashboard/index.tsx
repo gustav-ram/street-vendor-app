@@ -178,6 +178,7 @@ export default function GoLiveScreen() {
         <Button variant="outline" label={`🗓️ ${t('actions.schedule')}`} onPress={() => router.push('/dashboard/schedule')} />
         <Button variant="outline" label={`📷 ${t('actions.photos')}`} onPress={() => router.push('/dashboard/photos')} />
         <Button variant="outline" label={`★ ${t('actions.reviews')}`} onPress={() => router.push('/dashboard/reviews')} />
+        <Button variant="outline" label={`📊 ${t('actions.stats')}`} onPress={() => router.push('/dashboard/stats')} />
         <Button variant="outline" label={`🛡️ ${t('actions.badge')}`} onPress={() => router.push('/dashboard/badge')} />
         <Button variant="outline" label={`⚙️ ${t('actions.profile')}`} onPress={() => router.push('/dashboard/settings')} />
         <Button

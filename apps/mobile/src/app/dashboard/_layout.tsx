@@ -23,6 +23,7 @@ export default function DashboardLayout() {
       <Stack.Screen name="schedule" options={{ title: t('schedule.title') }} />
       <Stack.Screen name="badge" options={{ title: t('badge.title') }} />
       <Stack.Screen name="sync" options={{ title: t('sync.title') }} />
+      <Stack.Screen name="stats" options={{ title: t('stats.title') }} />
     </Stack>
   );
 }
