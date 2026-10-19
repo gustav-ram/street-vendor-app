@@ -42,6 +42,8 @@ export default function RootLayout() {
         <Stack.Screen name="auth/sign-in" options={{ presentation: 'modal', title: t('signInTitle', { ns: 'auth' }) }} />
         <Stack.Screen name="auth/sign-up" options={{ presentation: 'modal', title: t('signUpTitle', { ns: 'auth' }) }} />
         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+        <Stack.Screen name="privacy" options={{ title: t('title', { ns: 'privacy' }) }} />
+        <Stack.Screen name="my-data" options={{ title: t('title', { ns: 'account' }) }} />
       </Stack>
     </QueryClientProvider>
   );

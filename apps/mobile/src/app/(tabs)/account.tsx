@@ -15,6 +15,7 @@ export default function AccountScreen() {
   const { t } = useTranslation();
   const { t: ta } = useTranslation('auth');
   const { t: td } = useTranslation('dashboard');
+  const { t: tp } = useTranslation('privacy');
   const { status, me } = useAuth();
   const sync = useSyncSummary();
 
@@ -64,6 +65,10 @@ export default function AccountScreen() {
           <Text style={styles.heading}>{t('language.label')}</Text>
           <LanguageToggle />
         </View>
+        <Button variant="outline" label={`🔒 ${t('nav.privacy')}`} onPress={() => router.push('/privacy')} />
+        {status === 'signedIn' && (
+          <Button variant="outline" label={`📦 ${tp('accountLink')}`} onPress={() => router.push('/my-data')} />
+        )}
         <ServerStatus />
       </ScrollView>
     </SafeAreaView>
