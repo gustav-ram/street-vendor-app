@@ -3,6 +3,7 @@ import { normalizeText } from '@streeteats/shared';
 import { loadConfig } from '../src/config';
 import { createDb, type Db } from '../src/db/client';
 import {
+  analyticsDaily,
   inviteCodes,
   menuItems,
   photos,
@@ -252,6 +253,27 @@ export async function seed(db: Db) {
       status: v.verified ? 'verified' : 'none',
       verifiedAt: v.verified ? now : null,
     });
+
+    // 30 days of made-up daily totals so the Stats charts have something to show.
+    // Busier on Fridays and Saturdays, and for vendors with more reviews.
+    const busy = 1 + (v.reviewCount ?? 0) / 3;
+    const days = [];
+    for (let back = 30; back >= 1; back--) {
+      const day = localDay(new Date(now.getTime() - back * 86_400_000), TZ);
+      const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+      const views = Math.round(busy * (weekday === 5 || weekday === 6 ? 7 : 3) * (0.4 + rand()));
+      days.push({
+        vendorId,
+        day,
+        profileViews: views,
+        mapImpressions: views * 4 + Math.round(rand() * 10),
+        directionsTaps: Math.round(views * 0.3 * rand()),
+        favoritesAdded: rand() < 0.15 ? 1 : 0,
+        favoritesRemoved: rand() < 0.03 ? 1 : 0,
+        confirmations: rand() < 0.12 * busy ? 1 : 0,
+      });
+    }
+    await db.insert(analyticsDaily).values(days);
   }
 
   // Customer photos on Danger Dogs: one approved, one waiting in the moderation queue for admin@demo.test.
