@@ -66,7 +66,8 @@
     "upcoming": "Where I'll be",
     "schedule": "Weekly schedule",
     "badge": "Community Verified",
-    "sync": "Sync issues"
+    "sync": "Sync issues",
+    "stats": "Stats"
   },
   "status": {
     "title": "Post an update",
@@ -264,5 +265,23 @@
     "simulateOffline": "Simulate no signal (testing)",
     "simulateOfflineHint": "For testing: the app acts as if this phone has no connection.",
     "queuedPhoto": "Waiting to upload"
+  },
+  "stats": {
+    "title": "Stats",
+    "range7": "Last 7 days",
+    "range30": "Last 30 days",
+    "profileViews": "Page views",
+    "mapImpressions": "Seen on the map",
+    "directionsTaps": "Directions",
+    "favoritesAdded": "New favorites",
+    "confirmations": "\"Still here?\" taps",
+    "favoritesNow_one": "{{count}} person has you saved",
+    "favoritesNow_other": "{{count}} people have you saved",
+    "privacy": "Only daily totals are counted. StreetEats doesn't know who looked.",
+    "perDay": "{{what}} per day",
+    "today": "Today",
+    "table": "Show the numbers",
+    "empty": "Nothing counted in this period yet.",
+    "day": "Day"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "title": "Mi cuenta",
+  "export": {
+    "title": "Descargar mis datos",
+    "body": "Un archivo (.zip) con todo lo que StreetEats guarda sobre usted, y las fotos que subió.",
+    "button": "Descargar mis datos",
+    "working": "Preparando…",
+    "done": "Su archivo está listo."
+  },
+  "delete": {
+    "title": "Borrar mi cuenta",
+    "body": "Borra su cuenta y todo lo que contiene para siempre: su negocio, menú, avisos, fotos, reseñas y favoritos. No se puede deshacer.",
+    "vendorNote": "Si está abierto, saldrá del mapa de inmediato.",
+    "secret": "Escriba su contraseña o PIN para confirmar",
+    "button": "Borrar mi cuenta para siempre",
+    "working": "Borrando…",
+    "done": "Se borró su cuenta y todo lo que contenía."
+  }
+}

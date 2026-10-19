@@ -36,5 +36,29 @@
   "liveDays_one": "{{count}} día abierto",
   "liveDays_other": "{{count}} días abierto",
   "noVendors": "No se encontraron vendedores.",
-  "since": "Desde {{date}}"
+  "since": "Desde {{date}}",
+  "invites": {
+    "title": "Códigos de invitación y volantes",
+    "hint": "Solo se guardan totales: cuántos códigos hay y cuántas veces se usó cada uno, nunca quién.",
+    "label": "Campaña (solo la ven los administradores)",
+    "labelPlaceholder": "p. ej. Volantes Boyle Heights, octubre",
+    "max": "Límite (opcional)",
+    "days": "Vence en días (opcional)",
+    "create": "Crear código",
+    "used_one": "Usado {{count}} vez",
+    "used_other": "Usado {{count}} veces",
+    "usedOf": "Usado {{count}} de {{max}}",
+    "until": "Hasta el {{date}}",
+    "expired": "Vencido",
+    "disabled": "Desactivado",
+    "disable": "Desactivar",
+    "enable": "Activar",
+    "flyer": "Imprimir volante",
+    "copy": "Copiar enlace",
+    "copied": "Copiado",
+    "stats": "Códigos creados: {{codes}} · Veces usados: {{redemptions}}",
+    "empty": "Todavía no hay códigos.",
+    "print": "Imprimir o guardar como PDF",
+    "back": "Volver a moderación"
+  }
 }

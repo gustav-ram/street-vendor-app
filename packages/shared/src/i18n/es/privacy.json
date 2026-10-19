@@ -1,0 +1,38 @@
+{
+  "title": "Su privacidad",
+  "intro": "StreetEats está hecho para que comparta lo menos posible. Aquí le explicamos exactamente qué se comparte y cuándo.",
+  "never": {
+    "title": "Lo que nunca le pedimos",
+    "body": "Su nombre legal, su domicilio, una identificación ni su situación migratoria. Ni para registrarse, ni para vender, ni para la insignia. Su correo o teléfono solo sirve para entrar y nunca se le muestra a nadie."
+  },
+  "customers": {
+    "title": "Si busca comida",
+    "location": "Su ubicación solo se usa para encontrar vendedores cerca de usted. Primero se redondea a más o menos una cuadra, y nunca se guarda ni se anota en nuestros registros. También puede elegir un barrio en su lugar.",
+    "stillHere": "Cuando toca \"Sí, aquí están\", revisamos una vez que esté cerca y luego olvidamos dónde estaba. Solo guardamos un código que no se puede leer y que se borra a los 30 días, así que nadie puede saber que fue usted.",
+    "reviews": "Las reseñas muestran el apodo que usted elige, no su correo ni su teléfono.",
+    "photos": "A las fotos que agrega se les quitan la ubicación y los datos de la cámara. Un moderador las revisa antes de que alguien más las vea.",
+    "tracking": "No seguimos lo que usted mira. Los vendedores solo ven totales por día, como \"20 visitas hoy\"."
+  },
+  "vendors": {
+    "title": "Si vende",
+    "live": "Su ubicación solo se comparte mientras está abierto (\"Estoy abierto\"). Cuando cierra, o la app se cierra o pierde señal por 5 minutos, se borra. Nunca guardamos un historial de dónde ha estado.",
+    "approximate": "Con \"Área aproximada\" (la opción normal), los clientes ven un punto a más o menos una cuadra de usted. Es siempre el mismo punto, así que no se puede promediar para encontrar su lugar exacto.",
+    "upcoming": "Los lugares de \"Dónde estaré\" y su horario semanal funcionan igual: aproximados, a menos que elija exacto. Cada lugar se borra cuando termina su horario.",
+    "phone": "Los cambios que hace sin señal esperan en su teléfono hasta que se envían. Al cerrar sesión se borra todo lo que la app guardó ahí.",
+    "contact": "Su contacto público está apagado a menos que usted lo encienda. Las insignias de pago solo muestran el tipo (efectivo, tarjeta...), nunca nombres ni números de cuenta.",
+    "badge": "La insignia \"Verificado por la comunidad\" sale de conteos: días abierto, toques de clientes y reseñas. Nunca pide documentos y no cambia su lugar en las búsquedas.",
+    "stats": "Sus estadísticas son solo totales por día. StreetEats no sabe quién miró."
+  },
+  "controls": {
+    "title": "Usted tiene el control",
+    "offline": "Cerrar ahora: sale del mapa al instante y su ubicación se borra.",
+    "vacation": "El modo vacaciones oculta su página por completo hasta que lo apague.",
+    "export": "Descargar mis datos: un archivo con todo lo que StreetEats guarda sobre usted.",
+    "delete": "Borrar mi cuenta: se borra todo, fotos incluidas. No se puede deshacer."
+  },
+  "others": {
+    "title": "¿Alguien más ve algo?",
+    "body": "Las imágenes del mapa vienen de OpenStreetMap en el sitio web y de Apple Maps en el iPhone. Como cualquier mapa, ven qué parte del mapa está en su pantalla, pero no quién es usted, quién vende ni qué buscó. No usamos anuncios, rastreadores ni empresas de analítica."
+  },
+  "accountLink": "Descargar o borrar mis datos"
+}

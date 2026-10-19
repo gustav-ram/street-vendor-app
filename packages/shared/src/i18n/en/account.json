@@ -1,0 +1,19 @@
+{
+  "title": "My account",
+  "export": {
+    "title": "Download my data",
+    "body": "A file (.zip) with everything StreetEats keeps about you, and the photos you uploaded.",
+    "button": "Download my data",
+    "working": "Preparing…",
+    "done": "Your file is ready."
+  },
+  "delete": {
+    "title": "Delete my account",
+    "body": "Deletes your account and everything in it for good: your business, menu, posts, photos, reviews and favorites. It can't be undone.",
+    "vendorNote": "If you're open, you'll be taken off the map right away.",
+    "secret": "Type your password or PIN to confirm",
+    "button": "Delete my account forever",
+    "working": "Deleting…",
+    "done": "Your account and everything in it were deleted."
+  }
+}

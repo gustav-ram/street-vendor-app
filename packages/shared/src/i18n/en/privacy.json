@@ -1,0 +1,38 @@
+{
+  "title": "Your privacy",
+  "intro": "StreetEats is built so you share as little as possible. Here is exactly what's shared, and when.",
+  "never": {
+    "title": "What we never ask for",
+    "body": "Your legal name, home address, ID or immigration status. Not to sign up, not to sell, not for the badge. Your email or phone is only for signing in and is never shown to anyone."
+  },
+  "customers": {
+    "title": "If you're looking for food",
+    "location": "Your location is used only to find vendors near you. It is rounded to about a block first, and it is never saved or written in our logs. You can also pick a neighborhood instead.",
+    "stillHere": "When you tap \"Yes, they're here\", we check once that you're nearby and then forget where you were. We keep only a code that can't be read and is deleted after 30 days, so nobody can tell it was you.",
+    "reviews": "Reviews show the nickname you choose, not your email or phone.",
+    "photos": "Photos you add have their location and camera details removed. A moderator checks them before anyone else sees them.",
+    "tracking": "We don't follow what you look at. Vendors only see daily totals, like \"20 page views today\"."
+  },
+  "vendors": {
+    "title": "If you sell",
+    "live": "Your location is shared only while you're open (\"I'm open\"). When you close, or the app is closed or loses signal for 5 minutes, it is deleted. We never keep a history of where you've been.",
+    "approximate": "With \"Approximate area\" (the default), customers see a point about a block from you. It's the same point every time, so it can't be averaged to find your exact spot.",
+    "upcoming": "\"Where I'll be\" spots and your weekly schedule work the same way: approximate unless you choose exact. Each spot is deleted after its time ends.",
+    "phone": "Changes you make without signal wait on your phone until they're sent. Signing out deletes everything the app saved there.",
+    "contact": "Your public contact line is off unless you turn it on. Payment badges show only the type (cash, card...), never account names or numbers.",
+    "badge": "The \"Community Verified\" badge comes from counts: days open, customer taps and reviews. It never needs documents, and it doesn't change your place in search.",
+    "stats": "Your stats are daily totals only. StreetEats doesn't know who looked."
+  },
+  "controls": {
+    "title": "You're in control",
+    "offline": "Close now: off the map at once, and your location is deleted.",
+    "vacation": "Vacation mode hides your page completely until you turn it off.",
+    "export": "Download my data: a file with everything StreetEats keeps about you.",
+    "delete": "Delete my account: everything goes, photos included. It can't be undone."
+  },
+  "others": {
+    "title": "Does anyone else see anything?",
+    "body": "The map pictures come from OpenStreetMap on the website and Apple Maps on iPhone. Like any map, they see which part of the map is on your screen, but not who you are, who is a vendor or what you searched. We don't use ads, trackers or analytics companies."
+  },
+  "accountLink": "Download or delete my data"
+}

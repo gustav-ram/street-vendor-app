@@ -36,5 +36,29 @@
   "liveDays_one": "{{count}} day live",
   "liveDays_other": "{{count}} days live",
   "noVendors": "No vendors found.",
-  "since": "Since {{date}}"
+  "since": "Since {{date}}",
+  "invites": {
+    "title": "Invite codes and flyers",
+    "hint": "Only totals are kept: how many codes and how many times each was used, never by whom.",
+    "label": "Campaign (only admins see it)",
+    "labelPlaceholder": "e.g. Boyle Heights flyers, October",
+    "max": "Limit (optional)",
+    "days": "Expires in days (optional)",
+    "create": "Create code",
+    "used_one": "Used {{count}} time",
+    "used_other": "Used {{count}} times",
+    "usedOf": "Used {{count}} of {{max}}",
+    "until": "Until {{date}}",
+    "expired": "Expired",
+    "disabled": "Disabled",
+    "disable": "Disable",
+    "enable": "Enable",
+    "flyer": "Print flyer",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "stats": "Codes made: {{codes}} · Times used: {{redemptions}}",
+    "empty": "No codes yet.",
+    "print": "Print or save as PDF",
+    "back": "Back to moderation"
+  }
 }

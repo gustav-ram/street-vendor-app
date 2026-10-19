@@ -66,7 +66,8 @@
     "upcoming": "Dónde estaré",
     "schedule": "Horario semanal",
     "badge": "Verificado por la comunidad",
-    "sync": "Problemas al sincronizar"
+    "sync": "Problemas al sincronizar",
+    "stats": "Estadísticas"
   },
   "status": {
     "title": "Publicar un aviso",
@@ -264,5 +265,23 @@
     "simulateOffline": "Simular sin señal (pruebas)",
     "simulateOfflineHint": "Para pruebas: la app actúa como si este teléfono no tuviera conexión.",
     "queuedPhoto": "Esperando para subir"
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "range7": "Últimos 7 días",
+    "range30": "Últimos 30 días",
+    "profileViews": "Visitas a su página",
+    "mapImpressions": "Visto en el mapa",
+    "directionsTaps": "Cómo llegar",
+    "favoritesAdded": "Nuevos favoritos",
+    "confirmations": "Toques de \"¿Sigue aquí?\"",
+    "favoritesNow_one": "{{count}} persona lo tiene guardado",
+    "favoritesNow_other": "{{count}} personas lo tienen guardado",
+    "privacy": "Solo se cuentan totales por día. StreetEats no sabe quién miró.",
+    "perDay": "{{what}} por día",
+    "today": "Hoy",
+    "table": "Ver los números",
+    "empty": "Todavía no hay nada contado en este periodo.",
+    "day": "Día"
   }
 }

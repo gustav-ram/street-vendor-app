@@ -1,5 +1,6 @@
 import type { UiLocale } from '../constants';
 import { FALLBACK_LOCALE } from './locale';
+import enAccount from './en/account.json';
 import enAdmin from './en/admin.json';
 import enAuth from './en/auth.json';
 import enCatalog from './en/catalog.json';
@@ -7,8 +8,10 @@ import enCommon from './en/common.json';
 import enCommunity from './en/community.json';
 import enDashboard from './en/dashboard.json';
 import enErrors from './en/errors.json';
+import enPrivacy from './en/privacy.json';
 import enSearch from './en/search.json';
 import enVendor from './en/vendor.json';
+import esAccount from './es/account.json';
 import esAdmin from './es/admin.json';
 import esAuth from './es/auth.json';
 import esCatalog from './es/catalog.json';
@@ -16,6 +19,7 @@ import esCommon from './es/common.json';
 import esCommunity from './es/community.json';
 import esDashboard from './es/dashboard.json';
 import esErrors from './es/errors.json';
+import esPrivacy from './es/privacy.json';
 import esSearch from './es/search.json';
 import esVendor from './es/vendor.json';
 
@@ -24,8 +28,8 @@ import esVendor from './es/vendor.json';
 // folder and listing it here and in UI_LOCALES.
 
 export const resources = {
-  en: { common: enCommon, errors: enErrors, catalog: enCatalog, auth: enAuth, search: enSearch, vendor: enVendor, dashboard: enDashboard, community: enCommunity, admin: enAdmin },
-  es: { common: esCommon, errors: esErrors, catalog: esCatalog, auth: esAuth, search: esSearch, vendor: esVendor, dashboard: esDashboard, community: esCommunity, admin: esAdmin },
+  en: { common: enCommon, errors: enErrors, catalog: enCatalog, auth: enAuth, search: enSearch, vendor: enVendor, dashboard: enDashboard, community: enCommunity, admin: enAdmin, account: enAccount, privacy: enPrivacy },
+  es: { common: esCommon, errors: esErrors, catalog: esCatalog, auth: esAuth, search: esSearch, vendor: esVendor, dashboard: esDashboard, community: esCommunity, admin: esAdmin, account: esAccount, privacy: esPrivacy },
 } as const;
 
 export type Namespace = keyof (typeof resources)['en'];
