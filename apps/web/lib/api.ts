@@ -28,6 +28,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   meta: () => request<MetaResponse>("/v1/meta"),
+  checkInvite: (code: string) => request<{ valid: boolean }>(`/v1/invites/${encodeURIComponent(code)}`),
   // POST so the (already coarsened) location stays out of URLs and history.
   search: (body: SearchRequest) => request<SearchResponse>("/v1/search", { method: "POST", body: JSON.stringify(body) }),
   vendor: (id: string) => request<VendorProfile>(`/v1/vendors/${encodeURIComponent(id)}`),

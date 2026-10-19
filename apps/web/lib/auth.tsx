@@ -3,8 +3,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
+  type AdminInvite,
   type AdminReport,
   type AdminVendor,
+  type AnalyticsRange,
+  type CreateInviteInput,
   type AuthResponse,
   type Block,
   type BlockInput,
@@ -34,6 +37,7 @@ import {
   uploadBlob,
   type VendorPhotoKind,
   type VendorProfileUpdate,
+  type VendorAnalytics,
   type VendorReview,
   type VerificationDecision,
   type VerificationProgress,
@@ -163,6 +167,17 @@ export const adminApi = {
   },
   decideVerification: (vendorId: string, decision: VerificationDecision) =>
     authed<VerificationProgress>(`/v1/admin/vendors/${vendorId}/verification`, json("POST", decision)),
+  invites: () => authed<{ invites: AdminInvite[]; stats: { codes: number; redemptions: number } }>("/v1/admin/invites"),
+  invite: (id: string) => authed<AdminInvite>(`/v1/admin/invites/${id}`),
+  createInvite: (input: CreateInviteInput) => authed<AdminInvite>("/v1/admin/invites", json("POST", input)),
+  setInviteDisabled: (id: string, disabled: boolean) => authed<AdminInvite>(`/v1/admin/invites/${id}`, json("PATCH", { disabled })),
+};
+
+/** "Download my data" and "Delete my account". */
+export const accountApi = {
+  /** The export zip, as a temporary object URL to download. */
+  exportUrl: async () => URL.createObjectURL(await (await authedResponse("/v1/me/export")).blob()),
+  remove: (secret: string) => authed<void>("/v1/me", json("DELETE", { secret })),
 };
 
 export const vendorApi = {
@@ -192,6 +207,7 @@ export const vendorApi = {
     remove: (id: string) => authed<WriteResult>(`/v1/vendor/upcoming/${id}`, json("DELETE", { clientUpdatedAt: new Date().toISOString() })),
   },
   schedule: (input: ScheduleInput) => authed<MyVendor>("/v1/vendor/schedule", json("PUT", input)),
+  analytics: (range: AnalyticsRange) => authed<VendorAnalytics>(`/v1/vendor/analytics?range=${range}`),
   verification: () => authed<VerificationProgress>("/v1/vendor/verification"),
   photos: {
     list: () => authed<MyPhotos>("/v1/vendor/photos"),
@@ -219,6 +235,8 @@ interface AuthValue {
   signIn: (identifier: { email?: string; phone?: string }, secret: string) => Promise<Me>;
   signUp: (input: RegisterInput) => Promise<Me>;
   signOut: () => Promise<void>;
+  /** After deleting the account: forget the session here (the server already has). */
+  forget: () => void;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -257,6 +275,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await raw("/v1/auth/logout", { method: "POST" }).catch(() => {});
         accessToken = null;
         queryClient.removeQueries({ queryKey: MY_VENDOR_KEY });
+        setMe(null);
+        setStatus("signedOut");
+      },
+      forget: () => {
+        accessToken = null;
+        queryClient.clear();
         setMe(null);
         setStatus("signedOut");
       },

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
-import { goOffline, isLiveHere } from "@/lib/live";
 
 export function AccountLinks({ lang }: { lang: string }) {
   const { t } = useTranslation("auth");
@@ -11,7 +10,12 @@ export function AccountLinks({ lang }: { lang: string }) {
   const { t: td } = useTranslation("dashboard");
   const { t: tm } = useTranslation("community");
   const { t: tad } = useTranslation("admin");
-  const { status, me, signOut } = useAuth();
+  const { status, me } = useAuth();
+  const privacy = (
+    <Link href={`/${lang}/privacy`} className="underline-offset-4 hover:underline" title={tc("nav.privacy")}>
+      🔒<span className="hidden lg:inline"> {tc("nav.privacy")}</span>
+    </Link>
+  );
 
   if (status === "loading") return null;
   if (status === "signedIn" && me) {
@@ -30,22 +34,17 @@ export function AccountLinks({ lang }: { lang: string }) {
             {td("title")}
           </Link>
         )}
-        <button
-          type="button"
-          onClick={async () => {
-            // Signing out closes the stand first, so the location isn't left up for the grace period.
-            if (isLiveHere()) await goOffline();
-            await signOut();
-          }}
-          className="underline-offset-4 hover:underline"
-        >
-          {t("signOut")}
-        </button>
+        {privacy}
+        {/* Sign out, download and delete live on the account page. */}
+        <Link href={`/${lang}/account`} className="underline-offset-4 hover:underline" title={tc("nav.account")}>
+          👤<span className="hidden sm:inline"> {tc("nav.account")}</span>
+        </Link>
       </nav>
     );
   }
   return (
     <nav className="flex items-center gap-3 text-base font-bold">
+      {privacy}
       <Link href={`/${lang}/signup?role=vendor`} className="hidden text-chile hover:underline sm:inline">
         {tc("nav.forVendors")}
       </Link>
