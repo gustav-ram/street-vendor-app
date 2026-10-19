@@ -23,6 +23,7 @@
     "admin": "npm run admin -w @streeteats/api --",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
     "demo:live": "npm run demo:live -w @streeteats/api --"
   },
   "overrides": {
